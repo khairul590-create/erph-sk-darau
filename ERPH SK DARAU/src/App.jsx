@@ -694,17 +694,20 @@ function EmailAutomationPanel({ teachers }) {
   const triggerBatchEmail = () => {
     if (missingList.length === 0) return;
 
-    // 1. Get Emails
+    // 1. Dapatkan Senarai Email
     const emails = missingList.map(t => t.email).filter(e => e).join(',');
     
-    // 2. Create Template
-    const subject = `PERINGATAN: Penghantaran RPH Minggu ${targetWeek}`;
-    const body = `Assalamualaikum dan Salam Sejahtera,%0D%0A%0D%0AMerujuk perkara di atas, semakan sistem mendapati tuan/puan belum menghantar RPH bagi Minggu ${targetWeek}.%0D%0A%0D%0ASila kemaskini pautan Google Drive anda di portal e-RPH dengan kadar segera.%0D%0A%0D%0ATerima kasih.%0D%0APentadbir SK Darau`;
+    // 2. Buat Template Mesej (URL Encoded untuk Gmail)
+    const subject = encodeURIComponent(`PERINGATAN: Penghantaran RPH Minggu ${targetWeek}`);
+    const bodyText = `Assalamualaikum dan Salam Sejahtera,\n\nMerujuk perkara di atas, semakan sistem mendapati tuan/puan belum menghantar RPH bagi Minggu ${targetWeek}.\n\nSila kemaskini pautan Google Drive anda di portal e-RPH dengan kadar segera.\n\nTerima kasih.\nPentadbir SK Darau`;
+    const body = encodeURIComponent(bodyText);
 
-    // 3. Open Mail Client
-    window.location.href = `mailto:?bcc=${emails}&subject=${subject}&body=${body}`;
+    // 3. Bina Link Gmail Khas (Direct Link ke Compose Window)
+    // view=cm (Compose Mode), fs=1 (FullScreen), bcc (Blind Carbon Copy - untuk privasi)
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${emails}&su=${subject}&body=${body}`;
     
-    alert(`Aplikasi email anda akan dibuka untuk menghantar email kepada ${missingList.length} guru.`);
+    // 4. Buka di Tab Baru
+    window.open(gmailUrl, '_blank');
   };
 
   return (
@@ -744,8 +747,8 @@ function EmailAutomationPanel({ teachers }) {
               <div className="p-4 bg-red-100 border-b border-red-200 flex justify-between items-center">
                  <h4 className="font-bold text-red-800 text-xs uppercase flex items-center gap-2"><X size={16}/> BELUM ({missingList.length})</h4>
                  {missingList.length > 0 && (
-                    <button onClick={triggerBatchEmail} className="text-[9px] bg-white text-red-600 px-3 py-1.5 rounded-full border border-red-200 hover:bg-red-50 font-extrabold shadow-sm uppercase flex items-center gap-1">
-                      <Mail size={10} /> Email Semua
+                    <button onClick={triggerBatchEmail} className="text-[9px] bg-white text-red-600 px-3 py-1.5 rounded-full border border-red-200 hover:bg-red-50 font-extrabold shadow-sm uppercase flex items-center gap-1 transition-all hover:scale-105 active:scale-95">
+                      <Mail size={10} /> Buka Gmail
                     </button>
                  )}
               </div>
