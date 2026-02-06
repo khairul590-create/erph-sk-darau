@@ -6,7 +6,7 @@ import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Se
 
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
-  apiKey: "AIzaSyDPTOOj98A0HTtvm_frCTPTHPc7O7r9fzE",
+  apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
   storageBucket: "erph-sk-darau-2026.firebasestorage.app",
@@ -1042,3 +1042,4 @@ function TeacherPortal({ user, profile }) {
     </div>
   );
 }
+
