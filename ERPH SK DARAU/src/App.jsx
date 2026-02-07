@@ -7,7 +7,9 @@ import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Se
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
   // PENTING: Pastikan anda set 'VITE_GOOGLE_API_KEY' di dalam
-  // Netlify > Site settings > Environment variables
+  // Vercel > Project Settings > Environment Variables
+  // Nama Variable: VITE_GOOGLE_API_KEY
+  // Value: (API Key Firebase anda)
   apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
@@ -32,80 +34,80 @@ const LOGO_SK_DARAU = "https://lh3.googleusercontent.com/d/1iVOOLzgxpQv2BGFAPH1Q
 const LOGO_TS25 = "https://lh3.googleusercontent.com/d/13aBIWqbHgWmnUACjF0dTpbL5mPfmiGO7";
 
 
-// --- DATA GURU SK DARAU (72 ORANG) ---
+// --- DATA GURU SK DARAU (72 ORANG) DENGAN PIN ---
 const TEACHERS_DB = [
-  { id: 'g-87240145', name: 'ABDUL AZIZ BIN ABDULLAH', email: 'g-87240145@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-05569692', name: 'AHMED GHAZALI BIN APIUDDIN', email: 'g-05569692@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-00564304', name: 'AINI NADZIRAH BINTI MOHD KHLUBI', email: 'g-00564304@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-47261544', name: 'ALDEY SUSIN', email: 'g-47261544@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-95254612', name: 'ANGELINA @ CHRISTIE GADAS', email: 'g-95254612@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-66240149', name: 'ASNILAH ASHKAR', email: 'g-66240149@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-23278580', name: 'AWANGKU SYAHRUDIN BIN AWANG DZULKARNAIN', email: 'g-23278580@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-17240150', name: 'AZMAN BIN MUSA', email: 'g-17240150@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-18240151', name: 'AZWANI IZZAURA BINTI BASRI', email: 'g-18240151@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-65240152', name: 'BINJAMIN LOSOD', email: 'g-65240152@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-28240156', name: 'DELORIA RUBY BINTI JUSKING', email: 'g-28240156@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-18240157', name: 'DG MARIANI BINTI AWANG JUHAD', email: 'g-18240157@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-84240158', name: 'DORIN BINTI ATIU', email: 'g-84240158@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-80241999', name: 'FAIDATHUL ADAWIAH BINTI A. MALEK', email: 'g-80241999@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-56240161', name: 'FAUSIA BINTI NASIR', email: 'g-56240161@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-32511002', name: 'HAFIZATUL BINTI MOHD ZAINI', email: 'g-32511002@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-94241064', name: 'HARIANA A. AHONG', email: 'g-94241064@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-16240163', name: 'HASLINAH BTE HUSSIN', email: 'g-16240163@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-38240165', name: 'IDA HENDRAMARIA BINTI SUKUR', email: 'g-38240165@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-79244893', name: 'JERRY BIN JULIAN', email: 'g-79244893@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-81273852', name: 'JINEO SIMUN', email: 'g-81273852@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-27240169', name: 'JOHAN @ MOHD JOHAN BIN JANA', email: 'g-27240169@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-60240170', name: 'JOMILIN BINTI SIBIN', email: 'g-60240170@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-18240172', name: 'JURIA BINTI JUSOH', email: 'g-18240172@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-48240174', name: 'KHAIRNIELISA @ KHAIRUNISA BINTI LIAM', email: 'g-48240174@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-97239289', name: 'KHAIRUL AZWANI BIN AHININ', email: 'g-97239289@moe-dl.edu.my', subject: 'Guru Akademik', avatar: 'https://drive.google.com/file/d/1_qqCMlpiQSwRTGFjM1OQbPwgSefQfm-8/view?usp=sharing' },
-  { id: 'g-28241668', name: 'KUNG ANNY @ WAN NUR ARDINI ABDULLAH', email: 'g-28241668@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-40240177', name: 'LAWI ANAK KECHENDAI', email: 'g-40240177@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-06250632', name: 'LESLEY DESIREE EDANG', email: 'g-06250632@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-10240566', name: 'LORINA WILEH', email: 'g-10240566@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-46485985', name: 'MAISARAH BT ABD MALIK', email: 'g-46485985@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-16240178', name: 'MARIA BINTI JAMES MISSON', email: 'g-16240178@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-06240179', name: 'MARIATI BINTI MUSLEH', email: 'g-06240179@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-62237494', name: 'MARILYN SANDRA JEFFREY', email: 'g-62237494@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-32240181', name: 'MAZNIH BINTI MADIN', email: 'g-32240181@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-25256470', name: 'MELVIN HENRY', email: 'g-25256470@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-ipgp25204192', name: 'MUHAMMAD HAFIZ BIN ABDUL MUTALIB', email: 'g-ipgp25204192@moe-dl.edu.my', subject: 'Guru Akademik (Baru)', avatar: '' },
-  { id: 'g-49240184', name: 'MUJOS BIN MIASIN', email: 'g-49240184@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-42240186', name: 'NONI BINTI ALI', email: 'g-42240186@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-50254583', name: 'NOORAIDY BINTI MUTANG', email: 'g-50254583@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-17514173', name: 'NOORIDZAM BIN YUNUS', email: 'g-17514173@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-62241201', name: 'NORAMIRA BINTI ALI', email: 'g-62241201@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-58241077', name: 'NORMAWANI BINTI TOMO', email: 'g-58241077@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-24240190', name: 'NORSAIDAH BINTI SAIDIN', email: 'g-24240190@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-96565422', name: 'NUR AFIFAH SOLEHAH BINTI ZULKIFLY', email: 'g-96565422@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-22568935', name: 'NUR AUFA HADHIRAH BINTI MOHD ADNAM', email: 'g-22568935@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-60567093', name: 'NUR AYU IZZATI BINTI BAHARIN', email: 'g-60567093@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-12250987', name: 'NUR FADLINA BINTI MOHD LAZIM', email: 'g-12250987@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-44215818', name: 'NURSHAFIZA BINTI SHAFIE', email: 'g-44215818@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-56240191', name: 'NURSIAH BINTI MADRAH', email: 'g-56240191@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-22240193', name: 'PATIMAH BINTI LASAIN', email: 'g-22240193@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-26240195', name: 'REBECCA BT JIMMY', email: 'g-26240195@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-16240196', name: 'ROHAMI BINTI LASSIM', email: 'g-16240196@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-96240199', name: 'ROSIE LIEW', email: 'g-96240199@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-30240201', name: 'ROSLINAH BINTI MOHD NOOR', email: 'g-30240201@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-84240202', name: 'ROSMAH BINTI KASMAN', email: 'g-84240202@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-10240203', name: 'RUSDAH IJUM', email: 'g-10240203@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-21241022', name: 'SABRI BIN BAHRIN', email: 'g-21241022@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-90240207', name: 'SANDAUYAH BINTI DATU UGAI', email: 'g-90240207@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-49183622', name: 'SHARIF BIN SAFIAI', email: 'g-49183622@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-74240210', name: 'SITI NABILAH BINTI SAJALI', email: 'g-74240210@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-66566831', name: 'SITI NADIA BINTI MOHD HERMIN', email: 'g-66566831@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-24240211', name: 'STAFFALDA PATRICK DAYU', email: 'g-24240211@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-61249319', name: 'SUKRAN BIN SAUIPUL AHMAD', email: 'g-61249319@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-60240212', name: 'SUMARTINI BINTI SEMAIL', email: 'g-60240212@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-44240213', name: 'SURIANTI BINTI IRWAN', email: 'g-44240213@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-12240214', name: 'SUZAN KOJUNA', email: 'g-12240214@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-94511001', name: 'SUZANAH AWANG HUSSIN', email: 'g-94511001@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-06240215', name: 'VICTORIA JOHN', email: 'g-06240215@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-16240217', name: 'WINNY TAN TZE CHING', email: 'g-16240217@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-84240218', name: 'YUSNI BINTI YUNUS', email: 'g-84240218@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' },
-  { id: 'g-44524756', name: 'ZURIDHAH WAMIN', email: 'g-44524756@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '' }
+  { id: 'g-87240145', name: 'ABDUL AZIZ BIN ABDULLAH', email: 'g-87240145@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1001' },
+  { id: 'g-05569692', name: 'AHMED GHAZALI BIN APIUDDIN', email: 'g-05569692@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1002' },
+  { id: 'g-00564304', name: 'AINI NADZIRAH BINTI MOHD KHLUBI', email: 'g-00564304@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1003' },
+  { id: 'g-47261544', name: 'ALDEY SUSIN', email: 'g-47261544@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1004' },
+  { id: 'g-95254612', name: 'ANGELINA @ CHRISTIE GADAS', email: 'g-95254612@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1005' },
+  { id: 'g-66240149', name: 'ASNILAH ASHKAR', email: 'g-66240149@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1006' },
+  { id: 'g-23278580', name: 'AWANGKU SYAHRUDIN BIN AWANG DZULKARNAIN', email: 'g-23278580@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1007' },
+  { id: 'g-17240150', name: 'AZMAN BIN MUSA', email: 'g-17240150@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1008' },
+  { id: 'g-18240151', name: 'AZWANI IZZAURA BINTI BASRI', email: 'g-18240151@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1009' },
+  { id: 'g-65240152', name: 'BINJAMIN LOSOD', email: 'g-65240152@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1010' },
+  { id: 'g-28240156', name: 'DELORIA RUBY BINTI JUSKING', email: 'g-28240156@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1011' },
+  { id: 'g-18240157', name: 'DG MARIANI BINTI AWANG JUHAD', email: 'g-18240157@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1012' },
+  { id: 'g-84240158', name: 'DORIN BINTI ATIU', email: 'g-84240158@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1013' },
+  { id: 'g-80241999', name: 'FAIDATHUL ADAWIAH BINTI A. MALEK', email: 'g-80241999@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1014' },
+  { id: 'g-56240161', name: 'FAUSIA BINTI NASIR', email: 'g-56240161@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1015' },
+  { id: 'g-32511002', name: 'HAFIZATUL BINTI MOHD ZAINI', email: 'g-32511002@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1016' },
+  { id: 'g-94241064', name: 'HARIANA A. AHONG', email: 'g-94241064@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1017' },
+  { id: 'g-16240163', name: 'HASLINAH BTE HUSSIN', email: 'g-16240163@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1018' },
+  { id: 'g-38240165', name: 'IDA HENDRAMARIA BINTI SUKUR', email: 'g-38240165@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1019' },
+  { id: 'g-79244893', name: 'JERRY BIN JULIAN', email: 'g-79244893@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1020' },
+  { id: 'g-81273852', name: 'JINEO SIMUN', email: 'g-81273852@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1021' },
+  { id: 'g-27240169', name: 'JOHAN @ MOHD JOHAN BIN JANA', email: 'g-27240169@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1022' },
+  { id: 'g-60240170', name: 'JOMILIN BINTI SIBIN', email: 'g-60240170@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1023' },
+  { id: 'g-18240172', name: 'JURIA BINTI JUSOH', email: 'g-18240172@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1024' },
+  { id: 'g-48240174', name: 'KHAIRNIELISA @ KHAIRUNISA BINTI LIAM', email: 'g-48240174@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1025' },
+  { id: 'g-97239289', name: 'KHAIRUL AZWANI BIN AHININ', email: 'g-97239289@moe-dl.edu.my', subject: 'Guru Akademik', avatar: 'https://drive.google.com/file/d/1_qqCMlpiQSwRTGFjM1OQbPwgSefQfm-8/view?usp=sharing', pin: '1026' },
+  { id: 'g-28241668', name: 'KUNG ANNY @ WAN NUR ARDINI ABDULLAH', email: 'g-28241668@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1027' },
+  { id: 'g-40240177', name: 'LAWI ANAK KECHENDAI', email: 'g-40240177@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1028' },
+  { id: 'g-06250632', name: 'LESLEY DESIREE EDANG', email: 'g-06250632@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1029' },
+  { id: 'g-10240566', name: 'LORINA WILEH', email: 'g-10240566@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1030' },
+  { id: 'g-46485985', name: 'MAISARAH BT ABD MALIK', email: 'g-46485985@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1031' },
+  { id: 'g-16240178', name: 'MARIA BINTI JAMES MISSON', email: 'g-16240178@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1032' },
+  { id: 'g-06240179', name: 'MARIATI BINTI MUSLEH', email: 'g-06240179@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1033' },
+  { id: 'g-62237494', name: 'MARILYN SANDRA JEFFREY', email: 'g-62237494@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1034' },
+  { id: 'g-32240181', name: 'MAZNIH BINTI MADIN', email: 'g-32240181@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1035' },
+  { id: 'g-25256470', name: 'MELVIN HENRY', email: 'g-25256470@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1036' },
+  { id: 'g-ipgp25204192', name: 'MUHAMMAD HAFIZ BIN ABDUL MUTALIB', email: 'g-ipgp25204192@moe-dl.edu.my', subject: 'Guru Akademik (Baru)', avatar: '', pin: '1037' },
+  { id: 'g-49240184', name: 'MUJOS BIN MIASIN', email: 'g-49240184@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1038' },
+  { id: 'g-42240186', name: 'NONI BINTI ALI', email: 'g-42240186@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1039' },
+  { id: 'g-50254583', name: 'NOORAIDY BINTI MUTANG', email: 'g-50254583@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1040' },
+  { id: 'g-17514173', name: 'NOORIDZAM BIN YUNUS', email: 'g-17514173@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1041' },
+  { id: 'g-62241201', name: 'NORAMIRA BINTI ALI', email: 'g-62241201@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1042' },
+  { id: 'g-58241077', name: 'NORMAWANI BINTI TOMO', email: 'g-58241077@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1043' },
+  { id: 'g-24240190', name: 'NORSAIDAH BINTI SAIDIN', email: 'g-24240190@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1044' },
+  { id: 'g-96565422', name: 'NUR AFIFAH SOLEHAH BINTI ZULKIFLY', email: 'g-96565422@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1045' },
+  { id: 'g-22568935', name: 'NUR AUFA HADHIRAH BINTI MOHD ADNAM', email: 'g-22568935@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1046' },
+  { id: 'g-60567093', name: 'NUR AYU IZZATI BINTI BAHARIN', email: 'g-60567093@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1047' },
+  { id: 'g-12250987', name: 'NUR FADLINA BINTI MOHD LAZIM', email: 'g-12250987@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1048' },
+  { id: 'g-44215818', name: 'NURSHAFIZA BINTI SHAFIE', email: 'g-44215818@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1049' },
+  { id: 'g-56240191', name: 'NURSIAH BINTI MADRAH', email: 'g-56240191@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1050' },
+  { id: 'g-22240193', name: 'PATIMAH BINTI LASAIN', email: 'g-22240193@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1051' },
+  { id: 'g-26240195', name: 'REBECCA BT JIMMY', email: 'g-26240195@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1052' },
+  { id: 'g-16240196', name: 'ROHAMI BINTI LASSIM', email: 'g-16240196@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1053' },
+  { id: 'g-96240199', name: 'ROSIE LIEW', email: 'g-96240199@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1054' },
+  { id: 'g-30240201', name: 'ROSLINAH BINTI MOHD NOOR', email: 'g-30240201@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1055' },
+  { id: 'g-84240202', name: 'ROSMAH BINTI KASMAN', email: 'g-84240202@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1056' },
+  { id: 'g-10240203', name: 'RUSDAH IJUM', email: 'g-10240203@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1057' },
+  { id: 'g-21241022', name: 'SABRI BIN BAHRIN', email: 'g-21241022@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1058' },
+  { id: 'g-90240207', name: 'SANDAUYAH BINTI DATU UGAI', email: 'g-90240207@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1059' },
+  { id: 'g-49183622', name: 'SHARIF BIN SAFIAI', email: 'g-49183622@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1060' },
+  { id: 'g-74240210', name: 'SITI NABILAH BINTI SAJALI', email: 'g-74240210@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1061' },
+  { id: 'g-66566831', name: 'SITI NADIA BINTI MOHD HERMIN', email: 'g-66566831@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1062' },
+  { id: 'g-24240211', name: 'STAFFALDA PATRICK DAYU', email: 'g-24240211@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1063' },
+  { id: 'g-61249319', name: 'SUKRAN BIN SAUIPUL AHMAD', email: 'g-61249319@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1064' },
+  { id: 'g-60240212', name: 'SUMARTINI BINTI SEMAIL', email: 'g-60240212@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1065' },
+  { id: 'g-44240213', name: 'SURIANTI BINTI IRWAN', email: 'g-44240213@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1066' },
+  { id: 'g-12240214', name: 'SUZAN KOJUNA', email: 'g-12240214@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1067' },
+  { id: 'g-94511001', name: 'SUZANAH AWANG HUSSIN', email: 'g-94511001@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1068' },
+  { id: 'g-06240215', name: 'VICTORIA JOHN', email: 'g-06240215@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1069' },
+  { id: 'g-16240217', name: 'WINNY TAN TZE CHING', email: 'g-16240217@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1070' },
+  { id: 'g-84240218', name: 'YUSNI BINTI YUNUS', email: 'g-84240218@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1071' },
+  { id: 'g-44524756', name: 'ZURIDHAH WAMIN', email: 'g-44524756@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1072' }
 ];
 
 // --- HELPER: AUTO-CONVERT GOOGLE DRIVE LINKS TO IMAGE PREVIEW ---
@@ -173,15 +175,14 @@ const sendIndividualEmail = (teacher, type, extraData = {}) => {
     window.open(gmailUrl, '_blank');
 };
 
-// --- ADMIN ACCESS CONFIGURATION (TIADA AVATAR) ---
-// Nota: Medan "avatar" dibiarkan kosong ('') supaya ikon lidi (User) dipaparkan secara automatik.
+// --- ADMIN ACCESS CONFIGURATION (DENGAN PIN ADMIN) ---
 const ADMIN_PROFILES = [
-  { id: 'admin_gb', name: 'Guru Besar', roleLabel: 'GB', access: 'all', description: 'Akses Penuh (Semua Guru)', avatar: '', color: 'bg-purple-600' },
-  { id: 'admin_sys', name: 'Admin ICT', roleLabel: 'ADMIN', access: 'all', description: 'Akses Penuh (Penyelenggaraan)', avatar: '', color: 'bg-slate-800' },
-  { id: 'admin_pk1', name: 'PK Pentadbiran', roleLabel: 'PK1', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru Subjek Teras', avatar: '', color: 'bg-blue-600' },
-  { id: 'admin_hem', name: 'PK HEM', roleLabel: 'PKHEM', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru PI & Sejarah', avatar: '', color: 'bg-green-600' },
-  { id: 'admin_koko', name: 'PK Kokurikulum', roleLabel: 'PKKOKUM', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru RBT & PJPK', avatar: '', color: 'bg-orange-600' },
-  { id: 'admin_petang', name: 'PK Petang', roleLabel: 'PKPETANG', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru Sesi Petang', avatar: '', color: 'bg-indigo-600' },
+  { id: 'admin_gb', name: 'Guru Besar', roleLabel: 'GB', access: 'all', description: 'Akses Penuh (Semua Guru)', avatar: '', color: 'bg-purple-600', pin: '2026' },
+  { id: 'admin_sys', name: 'Admin ICT', roleLabel: 'ADMIN', access: 'all', description: 'Akses Penuh (Penyelenggaraan)', avatar: '', color: 'bg-slate-800', pin: '8888' },
+  { id: 'admin_pk1', name: 'PK Pentadbiran', roleLabel: 'PK1', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru Subjek Teras', avatar: '', color: 'bg-blue-600', pin: '3001' },
+  { id: 'admin_hem', name: 'PK HEM', roleLabel: 'PKHEM', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru PI & Sejarah', avatar: '', color: 'bg-green-600', pin: '3002' },
+  { id: 'admin_koko', name: 'PK Kokurikulum', roleLabel: 'PKKOKUM', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru RBT & PJPK', avatar: '', color: 'bg-orange-600', pin: '3003' },
+  { id: 'admin_petang', name: 'PK Petang', roleLabel: 'PKPETANG', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru Sesi Petang', avatar: '', color: 'bg-indigo-600', pin: '3004' },
 ];
 
 // --- MAIN APP COMPONENT ---
@@ -234,8 +235,15 @@ function LoginScreen({ onLogin, teachers }) {
 
   const handlePinSubmit = (e) => {
     e.preventDefault();
-    if (pinInput === "1234") { onLogin(userType, selectedUser); setSelectedUser(null); setPinInput(""); } 
-    else { setErrorMsg("PIN Salah. Sila cuba lagi."); setPinInput(""); }
+    // LOGIC BARU: Semak PIN berdasarkan pengguna yang dipilih
+    if (selectedUser && pinInput === selectedUser.pin) {
+        onLogin(userType, selectedUser);
+        setSelectedUser(null);
+        setPinInput("");
+    } else {
+        setErrorMsg("PIN Salah. Sila masukkan PIN anda yang sah.");
+        setPinInput("");
+    }
   };
 
   const openPinModal = (user, type) => { setSelectedUser(user); setUserType(type); setErrorMsg(""); setPinInput(""); };
@@ -264,8 +272,8 @@ function LoginScreen({ onLogin, teachers }) {
                 <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
                    {ADMIN_PROFILES.map(admin => (
                       <button key={admin.id} onClick={() => openPinModal(admin, 'admin')} className="w-full flex items-center gap-3 p-2 bg-blue-700/50 hover:bg-blue-500 rounded-lg text-left transition-colors border border-blue-500/30">
-                         {admin.avatar ? <img src={admin.avatar} className="w-8 h-8 rounded-full bg-white/10"/> : <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"><User size={16} /></div>}
-                         <div><span className="block text-xs font-bold text-white">{admin.name}</span><span className="block text-[10px] text-blue-200">{admin.roleLabel}</span></div>
+                          {admin.avatar ? <img src={admin.avatar} className="w-8 h-8 rounded-full bg-white/10"/> : <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"><User size={16} /></div>}
+                          <div><span className="block text-xs font-bold text-white">{admin.name}</span><span className="block text-[10px] text-blue-200">{admin.roleLabel}</span></div>
                       </button>
                    ))}
                 </div>
@@ -317,7 +325,7 @@ function LoginScreen({ onLogin, teachers }) {
             <form onSubmit={handlePinSubmit} className="p-6">
               <div className="mb-6 text-center">
                  <input type="password" autoFocus maxLength={4} placeholder="• • • •" className="w-full text-center text-3xl tracking-[1em] font-bold py-3 border-b-2 border-gray-300 focus:border-blue-600 outline-none transition-colors text-gray-800 placeholder:text-gray-300" value={pinInput} onChange={(e) => setPinInput(e.target.value)} />
-                 <p className="text-xs text-gray-400 mt-2">PIN Demo: 1234</p>
+                 <p className="text-xs text-gray-400 mt-2">Sila masukkan PIN peribadi anda.</p>
               </div>
               {errorMsg && <div className="mb-4 p-3 bg-red-50 text-red-600 text-xs font-bold rounded-lg text-center flex items-center justify-center gap-2"><AlertTriangle size={14} /> {errorMsg}</div>}
               <div className="flex gap-3">
@@ -595,10 +603,10 @@ function AnnouncementPanel() {
               </div>
             ) : (
               <div className="w-full h-32 border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 text-xs font-bold uppercase tracking-widest bg-slate-50/50">
-                 Tiada Pengumuman Aktif
+                  Tiada Pengumuman Aktif
               </div>
             )}
-            
+           
             <div className="mt-auto w-full flex flex-col items-center opacity-20">
                 <div className="w-16 h-16 bg-slate-300 rounded-full mb-3"></div>
                 <div className="w-2/3 h-4 bg-slate-300 rounded mb-2"></div>
