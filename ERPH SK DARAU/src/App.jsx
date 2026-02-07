@@ -6,6 +6,8 @@ import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Se
 
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
+  // KEMBALI KEPADA ENVIRONMENT VARIABLE (BEST PRACTICE UNTUK GITHUB/VERCEL)
+  // Pastikan anda set 'VITE_GOOGLE_API_KEY' di setting Vercel anda.
   apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
@@ -350,12 +352,25 @@ function AdminDashboard({ user, teachers, currentProfile }) {
   const [viewMode, setViewMode] = useState('list'); 
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  // NEW STATE FOR LIVE PREVIEW
+  const [announcement, setAnnouncement] = useState(null);
 
   const accessibleTeachers = useMemo(() => {
     if (currentProfile.access === 'all') return teachers;
     else if (currentProfile.access === 'restricted') return teachers; 
     return [];
   }, [teachers, currentProfile]);
+
+  // NEW EFFECT TO FETCH ANNOUNCEMENT FOR ADMIN PREVIEW
+  useEffect(() => {
+    const fetchAnnouncement = async () => {
+      try {
+        const annDoc = await getDoc(doc(db, DB_SETTINGS, 'announcement'));
+        if (annDoc.exists()) setAnnouncement(annDoc.data());
+      } catch (e) { console.log(e); }
+    };
+    fetchAnnouncement();
+  }, [viewMode]); 
 
   const filteredTeachers = accessibleTeachers.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
@@ -371,6 +386,20 @@ function AdminDashboard({ user, teachers, currentProfile }) {
           </div>
         </div>
       </div>
+
+      {/* ADMIN LIVE PREVIEW BANNER */}
+      {announcement?.isActive && announcement?.text && (
+        <div className="w-full bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3 animate-in fade-in">
+           <div className="bg-yellow-100 p-2 rounded text-yellow-700 shrink-0"><Megaphone size={20}/></div>
+           <div>
+              <h4 className="font-bold text-yellow-800 text-xs uppercase tracking-wide mb-1 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                Status: Sedang Dipaparkan Kepada Guru
+              </h4>
+              <p className="text-sm text-gray-800 leading-relaxed">{announcement.text}</p>
+           </div>
+        </div>
+      )}
 
       <div className="bg-white p-1 rounded-xl border border-gray-200 inline-flex shadow-sm w-full md:w-auto overflow-x-auto">
         <div className="flex gap-1 min-w-full">
@@ -406,12 +435,12 @@ function AdminDashboard({ user, teachers, currentProfile }) {
 
       {viewMode === 'audit' && <EmailAutomationPanel user={user} teachers={accessibleTeachers} />}
       {viewMode === 'calendar' && <CalendarSettingsPanel user={user} />}
-      {viewMode === 'announcement' && <AnnouncementPanel />}
+      {viewMode === 'announcement' && <AnnouncementPanel user={user} />}
     </div>
   );
 }
 
-// --- NEW ENHANCED ANNOUNCEMENT PANEL (LIVE PREVIEW) ---
+// --- ANNOUNCEMENT PANEL ---
 function AnnouncementPanel() {
   const [announcement, setAnnouncement] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -930,7 +959,7 @@ function TeacherPortal({ user, profile }) {
           teacherId: profile.id, teacherName: profile.name, week: selectedWeek, content: linkInput,
           status: 'submitted', submittedAt: now.toISOString(), isLate: isLate, score: null
         });
-    } catch (e) { alert("Gagal menghantar."); } finally { setIsSubmitting(false); }
+    } catch (e) { alert("Gagal menghantar."); console.error(e); } finally { setIsSubmitting(false); }
   };
 
   const getAnnStyles = (t) => {
@@ -978,7 +1007,7 @@ function TeacherPortal({ user, profile }) {
 
          <div className="relative z-10 flex flex-col items-center mb-8">
             <div className="w-20 h-20 rounded-full border-4 border-white shadow-xl overflow-hidden bg-slate-100 mb-4 flex items-center justify-center text-slate-300 font-black text-2xl uppercase">
-               {profile.avatar ? <img src={getAvatarUrl(profile.avatar)} className="w-full h-full object-cover"/> : profile.name.charAt(0)}
+               {profile.name.charAt(0)}
             </div>
             <h2 className="text-xl font-black text-gray-900 text-center leading-tight uppercase px-4">{profile.name}</h2>
             <p className="text-[10px] text-blue-600 font-black bg-blue-50 px-3 py-1 rounded-full mt-3 tracking-widest uppercase">{profile.email}</p>
