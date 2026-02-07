@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, orderBy, getDocs, getDoc } from 'firebase/firestore';
-import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw } from 'lucide-react';
+import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal } from 'lucide-react';
 
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
@@ -122,13 +122,8 @@ const getAvatarUrl = (url) => {
 const formatDateMY = (isoString) => {
   if (!isoString) return '';
   return new Date(isoString).toLocaleString('ms-MY', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: true
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
   });
 };
 
@@ -145,17 +140,44 @@ const formatDeadline = (deadlineStr) => {
   return new Date(deadlineStr).toLocaleString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 };
 
-// --- ADMIN ACCESS CONFIGURATION ---
+// --- HELPER: SEND INDIVIDUAL EMAIL (PAUTAN TERUS GMAIL) ---
+const sendIndividualEmail = (teacher, type, extraData = {}) => {
+    if (!teacher.email) {
+        alert("Guru ini tiada alamat email dalam sistem.");
+        return;
+    }
+
+    let subject = "";
+    let body = "";
+
+    if (type === 'missing') {
+        subject = `PERINGATAN: RPH Minggu ${extraData.week} Belum Diterima`;
+        body = `Assalamualaikum dan Salam Sejahtera ${teacher.name},\n\nSemakan mendapati tuan/puan masih belum menghantar RPH bagi Minggu ${extraData.week}. Sila hantar dengan kadar segera.\n\nTerima kasih.\nPentadbir SK Darau`;
+    } else if (type === 'grading') {
+        subject = `KEPUTUSAN SEMAKAN RPH: Minggu ${extraData.week}`;
+        body = `Assalamualaikum ${teacher.name},\n\nRPH Minggu ${extraData.week} anda telah disemak.\n\nMARKAH: ${extraData.score}%\nULASAN: ${extraData.comment}\n\nTerima kasih atas komitmen anda.\nPentadbir SK Darau`;
+    } else if (type === 'general') {
+        subject = `Hubungi Pentadbir: ${teacher.name}`;
+        body = `Assalamualaikum ${teacher.name},\n\nMerujuk kepada perkara...`;
+    }
+
+    // Gunakan pautan Gmail khas (view=cm) untuk buka tetingkap tulis email secara terus
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${teacher.email}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(gmailUrl, '_blank');
+};
+
+// --- ADMIN ACCESS CONFIGURATION (TIADA AVATAR - KOSONGKAN MEDAN AVATAR) ---
+// Nota: Medan "avatar" dibiarkan kosong ('') supaya ikon lidi (User) dipaparkan secara automatik.
 const ADMIN_PROFILES = [
-  { id: 'admin_gb', name: 'Guru Besar', roleLabel: 'GB', access: 'all', description: 'Akses Penuh (Semua Guru)', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=GB', color: 'bg-purple-600' },
-  { id: 'admin_sys', name: 'Admin ICT', roleLabel: 'ADMIN', access: 'all', description: 'Akses Penuh (Penyelenggaraan)', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=SysAdmin', color: 'bg-slate-800' },
-  { id: 'admin_pk1', name: 'PK Pentadbiran', roleLabel: 'PK1', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru Subjek Teras', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=PK1', color: 'bg-blue-600' },
-  { id: 'admin_hem', name: 'PK HEM', roleLabel: 'PKHEM', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru PI & Sejarah', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=HEM', color: 'bg-green-600' },
-  { id: 'admin_koko', name: 'PK Kokurikulum', roleLabel: 'PKKOKUM', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru RBT & PJPK', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Koko', color: 'bg-orange-600' },
-  { id: 'admin_petang', name: 'PK Petang', roleLabel: 'PKPETANG', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru Sesi Petang', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Petang', color: 'bg-indigo-600' },
+  { id: 'admin_gb', name: 'Guru Besar', roleLabel: 'GB', access: 'all', description: 'Akses Penuh (Semua Guru)', avatar: '', color: 'bg-purple-600' },
+  { id: 'admin_sys', name: 'Admin ICT', roleLabel: 'ADMIN', access: 'all', description: 'Akses Penuh (Penyelenggaraan)', avatar: '', color: 'bg-slate-800' },
+  { id: 'admin_pk1', name: 'PK Pentadbiran', roleLabel: 'PK1', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru Subjek Teras', avatar: '', color: 'bg-blue-600' },
+  { id: 'admin_hem', name: 'PK HEM', roleLabel: 'PKHEM', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru PI & Sejarah', avatar: '', color: 'bg-green-600' },
+  { id: 'admin_koko', name: 'PK Kokurikulum', roleLabel: 'PKKOKUM', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru RBT & PJPK', avatar: '', color: 'bg-orange-600' },
+  { id: 'admin_petang', name: 'PK Petang', roleLabel: 'PKPETANG', access: 'restricted', filterRule: (t) => true, description: 'Akses: Guru Sesi Petang', avatar: '', color: 'bg-indigo-600' },
 ];
 
-// --- Main Component ---
+// --- MAIN APP COMPONENT ---
 export default function App() {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null); 
@@ -164,41 +186,19 @@ export default function App() {
 
   useEffect(() => {
     const initAuth = async () => {
-        try {
-            await signInAnonymously(auth);
-        } catch (error) {
-            console.error("Auth Error:", error);
-        }
+        try { await signInAnonymously(auth); } catch (error) { console.error("Auth Error:", error); }
     };
     initAuth();
-    
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setLoading(false);
-    });
+    const unsubscribe = onAuthStateChanged(auth, (u) => { setUser(u); setLoading(false); });
     return () => unsubscribe();
   }, []);
 
-  const handleLogin = (selectedRole, profile = null) => {
-    setRole(selectedRole);
-    setCurrentProfile(profile);
-  };
+  const handleLogin = (selectedRole, profile = null) => { setRole(selectedRole); setCurrentProfile(profile); };
+  const handleLogout = () => { setRole(null); setCurrentProfile(null); };
 
-  const handleLogout = () => {
-    setRole(null);
-    setCurrentProfile(null);
-  };
+  if (loading) return <div className="flex flex-col h-screen items-center justify-center bg-slate-50 gap-4"><div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div><div className="text-blue-800 font-bold animate-pulse">Menghubungkan ke Database Sekolah...</div></div>;
 
-  if (loading) return (
-    <div className="flex flex-col h-screen items-center justify-center bg-slate-50 gap-4">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-        <div className="text-blue-800 font-bold animate-pulse">Menghubungkan ke Database Sekolah...</div>
-    </div>
-  );
-
-  if (!role) {
-    return <LoginScreen onLogin={handleLogin} teachers={TEACHERS_DB} />;
-  }
+  if (!role) return <LoginScreen onLogin={handleLogin} teachers={TEACHERS_DB} />;
 
   return (
     <div className="min-h-screen bg-slate-100 font-sans text-slate-800 flex flex-col">
@@ -223,31 +223,15 @@ function LoginScreen({ onLogin, teachers }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [showAdminList, setShowAdminList] = useState(false);
 
-  const filteredTeachers = useMemo(() => {
-    return teachers.filter(t => 
-      t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm, teachers]);
+  const filteredTeachers = useMemo(() => teachers.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()) || t.email.toLowerCase().includes(searchTerm.toLowerCase())), [searchTerm, teachers]);
 
   const handlePinSubmit = (e) => {
     e.preventDefault();
-    if (pinInput === "1234") {
-      onLogin(userType, selectedUser);
-      setSelectedUser(null);
-      setPinInput("");
-    } else {
-      setErrorMsg("PIN Salah. Sila cuba lagi.");
-      setPinInput("");
-    }
+    if (pinInput === "1234") { onLogin(userType, selectedUser); setSelectedUser(null); setPinInput(""); } 
+    else { setErrorMsg("PIN Salah. Sila cuba lagi."); setPinInput(""); }
   };
 
-  const openPinModal = (user, type) => {
-    setSelectedUser(user);
-    setUserType(type);
-    setErrorMsg("");
-    setPinInput("");
-  };
+  const openPinModal = (user, type) => { setSelectedUser(user); setUserType(type); setErrorMsg(""); setPinInput(""); };
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-slate-900 md:justify-center p-4">
@@ -273,7 +257,7 @@ function LoginScreen({ onLogin, teachers }) {
                 <div className="space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar pr-1">
                    {ADMIN_PROFILES.map(admin => (
                       <button key={admin.id} onClick={() => openPinModal(admin, 'admin')} className="w-full flex items-center gap-3 p-2 bg-blue-700/50 hover:bg-blue-500 rounded-lg text-left transition-colors border border-blue-500/30">
-                         <img src={admin.avatar} className="w-8 h-8 rounded-full bg-white/10"/>
+                         {admin.avatar ? <img src={admin.avatar} className="w-8 h-8 rounded-full bg-white/10"/> : <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white"><User size={16} /></div>}
                          <div><span className="block text-xs font-bold text-white">{admin.name}</span><span className="block text-[10px] text-blue-200">{admin.roleLabel}</span></div>
                       </button>
                    ))}
@@ -431,7 +415,7 @@ function AdminDashboard({ user, teachers, currentProfile }) {
 function AnnouncementPanel() {
   const [announcement, setAnnouncement] = useState('');
   const [isActive, setIsActive] = useState(true);
-  const [type, setType] = useState('info'); // info, warning, alert
+  const [type, setType] = useState('info'); 
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -664,7 +648,7 @@ function CalendarSettingsPanel() {
   );
 }
 
-// --- EMAIL/AUDIT PANEL (FIXED EMAIL BUTTON) ---
+// --- EMAIL/AUDIT PANEL (FIXED EMAIL BUTTON WITH CLIPBOARD COPY & INDIVIDUAL EMAILS) ---
 function EmailAutomationPanel({ teachers }) {
   const [targetWeek, setTargetWeek] = useState(1);
   const [lateList, setLateList] = useState([]);
@@ -691,23 +675,15 @@ function EmailAutomationPanel({ teachers }) {
     } catch (error) { alert("Gagal menyemak database."); } finally { setScanning(false); }
   };
 
-  const triggerBatchEmail = () => {
+  const triggerBatchEmail = async () => {
     if (missingList.length === 0) return;
-
-    // 1. Dapatkan Senarai Email
-    const emails = missingList.map(t => t.email).filter(e => e).join(',');
-    
-    // 2. Buat Template Mesej (URL Encoded untuk Gmail)
+    const emailList = missingList.map(t => t.email).filter(e => e).join(', ');
+    try { await navigator.clipboard.writeText(emailList); } catch (err) { console.error(err); }
     const subject = encodeURIComponent(`PERINGATAN: Penghantaran RPH Minggu ${targetWeek}`);
-    const bodyText = `Assalamualaikum dan Salam Sejahtera,\n\nMerujuk perkara di atas, semakan sistem mendapati tuan/puan belum menghantar RPH bagi Minggu ${targetWeek}.\n\nSila kemaskini pautan Google Drive anda di portal e-RPH dengan kadar segera.\n\nTerima kasih.\nPentadbir SK Darau`;
-    const body = encodeURIComponent(bodyText);
-
-    // 3. Bina Link Gmail Khas (Direct Link ke Compose Window)
-    // view=cm (Compose Mode), fs=1 (FullScreen), bcc (Blind Carbon Copy - untuk privasi)
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${emails}&su=${subject}&body=${body}`;
-    
-    // 4. Buka di Tab Baru
+    const body = encodeURIComponent(`Assalamualaikum dan Salam Sejahtera,\n\nMerujuk perkara di atas, semakan sistem mendapati tuan/puan belum menghantar RPH bagi Minggu ${targetWeek}.\n\nSila kemaskini pautan Google Drive anda di portal e-RPH dengan kadar segera.\n\nTerima kasih.\nPentadbir SK Darau`);
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`;
     window.open(gmailUrl, '_blank');
+    alert("✅ Senarai email guru telah disalin!\n\nSila 'PASTE' (Ctrl+V) senarai email tersebut di ruangan 'To' atau 'BCC' dalam Gmail yang baru dibuka.");
   };
 
   return (
@@ -740,20 +716,30 @@ function EmailAutomationPanel({ teachers }) {
           <div className="border border-amber-200 rounded-2xl bg-amber-50/30 overflow-hidden flex flex-col h-96 shadow-sm">
               <div className="p-4 bg-amber-100 border-b border-amber-200"><h4 className="font-bold text-amber-800 text-xs uppercase flex items-center gap-2"><Clock size={16}/> LEWAT ({lateList.length})</h4></div>
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                  {lateList.map(t => <div key={t.id} className="p-2 bg-white rounded-lg border border-amber-100 text-[10px] font-bold text-gray-700 shadow-sm truncate">{t.name}</div>)}
+                  {lateList.map(t => (
+                      <div key={t.id} className="p-2 bg-white rounded-lg border border-amber-100 text-[10px] font-bold text-gray-700 shadow-sm flex justify-between items-center group">
+                          <span className="truncate flex-1">{t.name}</span>
+                          <button onClick={() => sendIndividualEmail(t, 'missing', {week: targetWeek})} className="text-amber-500 hover:bg-amber-100 p-1 rounded transition-colors" title="Email Peringatan"><Mail size={12}/></button>
+                      </div>
+                  ))}
               </div>
           </div>
           <div className="border border-red-200 rounded-2xl bg-red-50/30 overflow-hidden flex flex-col h-96 shadow-sm">
               <div className="p-4 bg-red-100 border-b border-red-200 flex justify-between items-center">
                  <h4 className="font-bold text-red-800 text-xs uppercase flex items-center gap-2"><X size={16}/> BELUM ({missingList.length})</h4>
                  {missingList.length > 0 && (
-                    <button onClick={triggerBatchEmail} className="text-[9px] bg-white text-red-600 px-3 py-1.5 rounded-full border border-red-200 hover:bg-red-50 font-extrabold shadow-sm uppercase flex items-center gap-1 transition-all hover:scale-105 active:scale-95">
-                      <Mail size={10} /> Buka Gmail
+                    <button onClick={triggerBatchEmail} className="text-[9px] bg-white text-red-600 px-3 py-1.5 rounded-full border border-red-200 hover:bg-red-50 font-extrabold shadow-sm uppercase flex items-center gap-1 transition-all hover:scale-105 active:scale-95 group">
+                      <Copy size={10} className="group-hover:hidden" /> <Mail size={10} className="hidden group-hover:block" /> COPY & EMAIL
                     </button>
                  )}
               </div>
               <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                  {missingList.map(t => <div key={t.id} className="p-2 bg-white rounded-lg border border-red-100 text-[10px] font-bold text-gray-700 shadow-sm truncate">{t.name}</div>)}
+                  {missingList.map(t => (
+                      <div key={t.id} className="p-2 bg-white rounded-lg border border-red-100 text-[10px] font-bold text-gray-700 shadow-sm flex justify-between items-center group">
+                          <span className="truncate flex-1">{t.name}</span>
+                          <button onClick={() => sendIndividualEmail(t, 'missing', {week: targetWeek})} className="text-red-500 hover:bg-red-100 p-1 rounded transition-colors" title="Email Peringatan"><Mail size={12}/></button>
+                      </div>
+                  ))}
               </div>
           </div>
       </div>
@@ -774,15 +760,22 @@ function TeacherCard({ teacher, onClick, user }) {
   }, [user, teacher.id]);
 
   return (
-    <div onClick={onClick} className="bg-white p-5 rounded-2xl border border-gray-200 hover:border-blue-400 cursor-pointer shadow-sm group hover:shadow-lg transition-all active:scale-[0.98]">
+    <div className="relative bg-white p-5 rounded-2xl border border-gray-200 hover:border-blue-400 cursor-pointer shadow-sm group hover:shadow-lg transition-all active:scale-[0.98]" onClick={onClick}>
       <div className="flex items-center gap-3 mb-4">
         <div className="w-10 h-10 rounded-full bg-slate-100 border border-gray-100 flex items-center justify-center text-slate-400 font-black text-xs">
             {teacher.name.charAt(0)}
         </div>
-        <div className="overflow-hidden">
+        <div className="overflow-hidden flex-1">
             <h4 className="font-extrabold text-gray-900 text-xs truncate group-hover:text-blue-600">{teacher.name}</h4>
             <p className="text-[10px] text-gray-400 uppercase font-bold">{teacher.subject}</p>
         </div>
+        <button 
+            onClick={(e) => { e.stopPropagation(); sendIndividualEmail(teacher, 'general'); }} 
+            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all" 
+            title="Hubungi Guru"
+        >
+            <Mail size={16}/>
+        </button>
       </div>
       <div className="flex justify-between text-[10px] text-gray-400 font-black mb-2 uppercase"><span>PRESTASI</span><span>{Math.round((stats.submitted / TOTAL_WEEKS) * 100)}%</span></div>
       <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden"><div className="bg-blue-600 h-full rounded-full transition-all duration-1000" style={{ width: `${(stats.submitted / TOTAL_WEEKS) * 100}%` }}></div></div>
@@ -873,7 +866,7 @@ function AdminGradingView({ user, teacher }) {
                     </div>
                 </div>
             ) : (
-                <div className="mt-auto space-y-4">
+                <div className="mt-auto space-y-3">
                    {submissions[selectedWeek].score && (
                        <div className="bg-green-50 p-5 rounded-2xl border border-green-200 text-center shadow-inner">
                            <div className="text-4xl font-black text-green-700">{submissions[selectedWeek].score}%</div>
@@ -883,6 +876,12 @@ function AdminGradingView({ user, teacher }) {
                    <button onClick={() => setGradingMode(true)} className="w-full bg-blue-600 text-white font-black py-4 rounded-xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-2 uppercase text-xs">
                      <CheckCircle size={18} /> {submissions[selectedWeek].score ? 'KEMASKINI NILAI' : 'MULA SEMAK'}
                    </button>
+                   
+                   {submissions[selectedWeek].score && (
+                       <button onClick={() => sendIndividualEmail(teacher, 'grading', { week: selectedWeek, score: submissions[selectedWeek].score, comment: submissions[selectedWeek].comment })} className="w-full bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200 transition-colors border border-slate-200 flex items-center justify-center gap-2 text-xs">
+                           <SendHorizonal size={14} /> HANTAR KEPUTUSAN KE GURU
+                       </button>
+                   )}
                 </div>
             )}
           </div>
@@ -979,7 +978,7 @@ function TeacherPortal({ user, profile }) {
 
          <div className="relative z-10 flex flex-col items-center mb-8">
             <div className="w-20 h-20 rounded-full border-4 border-white shadow-xl overflow-hidden bg-slate-100 mb-4 flex items-center justify-center text-slate-300 font-black text-2xl uppercase">
-               {profile.name.charAt(0)}
+               {profile.avatar ? <img src={getAvatarUrl(profile.avatar)} className="w-full h-full object-cover"/> : profile.name.charAt(0)}
             </div>
             <h2 className="text-xl font-black text-gray-900 text-center leading-tight uppercase px-4">{profile.name}</h2>
             <p className="text-[10px] text-blue-600 font-black bg-blue-50 px-3 py-1 rounded-full mt-3 tracking-widest uppercase">{profile.email}</p>
@@ -1042,4 +1041,3 @@ function TeacherPortal({ user, profile }) {
     </div>
   );
 }
-
