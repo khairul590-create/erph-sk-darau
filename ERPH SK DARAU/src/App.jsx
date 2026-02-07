@@ -6,9 +6,9 @@ import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Se
 
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
-  // KEMBALI KEPADA ENVIRONMENT VARIABLE (BEST PRACTICE UNTUK GITHUB/VERCEL)
-  // Pastikan anda set 'VITE_GOOGLE_API_KEY' di setting Vercel anda.
-  apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+  // PENTING: API Key diletakkan terus di sini untuk mengelakkan "White Screen" di Netlify/Vercel
+  // Masalah skrin putih berlaku jika Netlify gagal membaca fail .env
+  apiKey: "AIzaSyDPTOOj98A0HTtvm_frCTPTHPc7O7r9fzE",
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
   storageBucket: "erph-sk-darau-2026.firebasestorage.app",
@@ -1070,5 +1070,3 @@ function TeacherPortal({ user, profile }) {
     </div>
   );
 }
-
-
