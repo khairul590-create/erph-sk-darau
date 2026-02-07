@@ -6,9 +6,9 @@ import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Se
 
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
-  // PENTING: API Key diletakkan terus di sini untuk mengelakkan "White Screen" di Netlify/Vercel
-  // Masalah skrin putih berlaku jika Netlify gagal membaca fail .env
-  apiKey: "AIzaSyDPTOOj98A0HTtvm_frCTPTHPc7O7r9fzE",
+  // PENTING: Pastikan anda set 'VITE_GOOGLE_API_KEY' di dalam
+  // Netlify > Site settings > Environment variables
+  apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
   storageBucket: "erph-sk-darau-2026.firebasestorage.app",
@@ -124,8 +124,13 @@ const getAvatarUrl = (url) => {
 const formatDateMY = (isoString) => {
   if (!isoString) return '';
   return new Date(isoString).toLocaleString('ms-MY', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
   });
 };
 
@@ -168,7 +173,7 @@ const sendIndividualEmail = (teacher, type, extraData = {}) => {
     window.open(gmailUrl, '_blank');
 };
 
-// --- ADMIN ACCESS CONFIGURATION (TIADA AVATAR - KOSONGKAN MEDAN AVATAR) ---
+// --- ADMIN ACCESS CONFIGURATION (TIADA AVATAR) ---
 // Nota: Medan "avatar" dibiarkan kosong ('') supaya ikon lidi (User) dipaparkan secara automatik.
 const ADMIN_PROFILES = [
   { id: 'admin_gb', name: 'Guru Besar', roleLabel: 'GB', access: 'all', description: 'Akses Penuh (Semua Guru)', avatar: '', color: 'bg-purple-600' },
