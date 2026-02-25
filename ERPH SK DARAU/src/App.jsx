@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, orderBy, getDocs, getDoc } from 'firebase/firestore';
-import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal } from 'lucide-react';
+import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, orderBy, getDocs, getDoc, deleteDoc } from 'firebase/firestore';
+import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal, Trash2 } from 'lucide-react';
 
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
@@ -11,10 +11,10 @@ const firebaseConfig = {
   
   // NOTA UNTUK PENGGUNA VERCEL:
   // Sila un-comment (buang //) pada baris di bawah ini apabila deploy ke Vercel:
-  apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+  // apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
 
   // Untuk tujuan paparan preview di sini (elak error compile), kita guna string kosong:
-  // apiKey: "ISI_API_KEY_FIREBASE_ANDA_DISINI", 
+  apiKey: "", 
   
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
@@ -37,7 +37,7 @@ const TOTAL_WEEKS = 42;
 const LOGO_SK_DARAU = "https://lh3.googleusercontent.com/d/1iVOOLzgxpQv2BGFAPH1QuCgVxIR9GTmx";
 const LOGO_TS25 = "https://lh3.googleusercontent.com/d/13aBIWqbHgWmnUACjF0dTpbL5mPfmiGO7";
 
-// --- DATA GURU SK DARAU (73 ORANG - Termasuk Nur Afiqah) ---
+// --- DATA GURU SK DARAU (73 ORANG - Disusun Ikut Gambar Senarai PK) ---
 // 'evaluators' array menentukan siapa yang boleh melihat guru ini.
 // Kod: 'pk1' (Pentadbiran), 'hem' (HEM), 'koko' (Kokurikulum), 'petang' (Petang)
 const TEACHERS_DB = [
@@ -58,15 +58,15 @@ const TEACHERS_DB = [
   { id: 'g-56240161', name: 'FAUSIA BINTI NASIR', email: 'g-56240161@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1015', evaluators: ['pk1'] },
   { id: 'g-32511002', name: 'HAFIZATUL BINTI MOHD ZAINI', email: 'g-32511002@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1016', evaluators: ['petang', 'koko'] },
   { id: 'g-94241064', name: 'HARIANA A. AHONG', email: 'g-94241064@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1017', evaluators: ['petang'] },
-  { id: 'g-16240163', name: 'HASLINAH BTE HUSSIN', email: 'g-16240163@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1018', evaluators: [] }, // Tidak tersenarai khusus, GB/Admin only
+  { id: 'g-16240163', name: 'HASLINAH BTE HUSSIN', email: 'g-16240163@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1018', evaluators: [] },
   { id: 'g-38240165', name: 'IDA HENDRAMARIA BINTI SUKUR', email: 'g-38240165@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1019', evaluators: ['pk1'] },
   { id: 'g-79244893', name: 'JERRY BIN JULIAN', email: 'g-79244893@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1020', evaluators: ['pk1'] },
   { id: 'g-81273852', name: 'JINEO SIMUN', email: 'g-81273852@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1021', evaluators: ['koko'] },
   { id: 'g-27240169', name: 'JOHAN @ MOHD JOHAN BIN JANA', email: 'g-27240169@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1022', evaluators: ['petang', 'koko'] },
   { id: 'g-60240170', name: 'JOMILIN BINTI SIBIN', email: 'g-60240170@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1023', evaluators: ['pk1'] },
-  { id: 'g-18240172', name: 'JURIA BINTI JUSOH', email: 'g-18240172@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1024', evaluators: [] }, // Tidak tersenarai khusus
+  { id: 'g-18240172', name: 'JURIA BINTI JUSOH', email: 'g-18240172@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1024', evaluators: [] },
   { id: 'g-48240174', name: 'KHAIRNIELISA @ KHAIRUNISA BINTI LIAM', email: 'g-48240174@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1025', evaluators: ['pk1', 'koko'] },
-  { id: 'g-97239289', name: 'KHAIRUL AZWANI BIN AHININ', email: 'g-97239289@moe-dl.edu.my', subject: 'Guru Akademik', avatar: 'https://drive.google.com/file/d/1_qqCMlpiQSwRTGFjM1OQbPwgSefQfm-8/view?usp=sharing', pin: '1026', evaluators: ['hem', 'koko'] },
+  { id: 'g-97239289', name: 'KHAIRUL AZWANI BIN AHININ', email: 'g-97239289@moe-dl.edu.my', subject: 'Guru Akademik', avatar: 'https://drive.google.com/file/d/1_qqCMlpiQSwRTGFjM1OQbPwgSefQfm-8/view?usp=sharing', pin: '1026', evaluators: ['koko'] },
   { id: 'g-28241668', name: 'KUNG ANNY @ WAN NUR ARDINI ABDULLAH', email: 'g-28241668@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1027', evaluators: ['pk1'] },
   { id: 'g-40240177', name: 'LAWI ANAK KECHENDAI', email: 'g-40240177@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1028', evaluators: ['petang', 'hem'] },
   { id: 'g-06250632', name: 'LESLEY DESIREE EDANG', email: 'g-06250632@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1029', evaluators: ['petang', 'koko'] },
@@ -75,9 +75,9 @@ const TEACHERS_DB = [
   { id: 'g-16240178', name: 'MARIA BINTI JAMES MISSON', email: 'g-16240178@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1032', evaluators: ['pk1'] },
   { id: 'g-06240179', name: 'MARIATI BINTI MUSLEH', email: 'g-06240179@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1033', evaluators: ['pk1'] },
   { id: 'g-62237494', name: 'MARILYN SANDRA JEFFREY', email: 'g-62237494@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1034', evaluators: ['pk1', 'petang'] },
-  { id: 'g-32240181', name: 'MAZNIH BINTI MADIN', email: 'g-32240181@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1035', evaluators: [] }, // Tidak tersenarai khusus
+  { id: 'g-32240181', name: 'MAZNIH BINTI MADIN', email: 'g-32240181@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1035', evaluators: [] },
   { id: 'g-25256470', name: 'MELVIN HENRY', email: 'g-25256470@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1036', evaluators: ['pk1', 'koko'] },
-  { id: 'g-ipgp25204192', name: 'MUHAMMAD HAFIZ BIN ABDUL MUTALIB', email: 'g-ipgp25204192@moe-dl.edu.my', subject: 'Guru Akademik (Baru)', avatar: '', pin: '1037', evaluators: ['petang', 'koko'] },
+  { id: 'muhammadhafiz', name: 'MUHAMMAD HAFIZ BIN ABDUL MUTALIB', email: 'muhammadhafiz.abdulmutalib@moe-dl.edu.my', subject: 'Guru Akademik (Baru)', avatar: '', pin: '1037', evaluators: ['petang', 'koko'] },
   { id: 'g-49240184', name: 'MUJOS BIN MIASIN', email: 'g-49240184@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1038', evaluators: ['pk1', 'koko'] },
   { id: 'g-42240186', name: 'NONI BINTI ALI', email: 'g-42240186@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1039', evaluators: ['petang', 'hem'] },
   { id: 'g-50254583', name: 'NOORAIDY BINTI MUTANG', email: 'g-50254583@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1040', evaluators: ['hem'] },
@@ -95,11 +95,11 @@ const TEACHERS_DB = [
   { id: 'g-26240195', name: 'REBECCA BT JIMMY', email: 'g-26240195@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1052', evaluators: ['pk1', 'petang'] },
   { id: 'g-16240196', name: 'ROHAMI BINTI LASSIM', email: 'g-16240196@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1053', evaluators: ['petang', 'hem'] },
   { id: 'g-96240199', name: 'ROSIE LIEW', email: 'g-96240199@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1054', evaluators: ['pk1'] },
-  { id: 'g-30240201', name: 'ROSLINAH BINTI MOHD NOOR', email: 'g-30240201@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1055', evaluators: [] }, // Tidak tersenarai khusus
+  { id: 'g-30240201', name: 'ROSLINAH BINTI MOHD NOOR', email: 'g-30240201@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1055', evaluators: [] },
   { id: 'g-84240202', name: 'ROSMAH BINTI KASMAN', email: 'g-84240202@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1056', evaluators: ['koko', 'hem'] },
   { id: 'g-10240203', name: 'RUSDAH IJUM', email: 'g-10240203@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1057', evaluators: ['koko', 'hem'] },
-  { id: 'g-21241022', name: 'SABRI BIN BAHRIN', email: 'g-21241022@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1058', evaluators: [] }, // Tidak tersenarai khusus
-  { id: 'g-90240207', name: 'SANDAUYAH BINTI DATU UGAI', email: 'g-90240207@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1059', evaluators: [] }, // Tidak tersenarai khusus
+  { id: 'g-21241022', name: 'SABRI BIN BAHRIN', email: 'g-21241022@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1058', evaluators: [] },
+  { id: 'g-90240207', name: 'SANDAUYAH BINTI DATU UGAI', email: 'g-90240207@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1059', evaluators: [] },
   { id: 'g-49183622', name: 'SHARIF BIN SAFIAI', email: 'g-49183622@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1060', evaluators: ['pk1', 'hem'] },
   { id: 'g-74240210', name: 'SITI NABILAH BINTI SAJALI', email: 'g-74240210@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1061', evaluators: ['koko'] },
   { id: 'g-66566831', name: 'SITI NADIA BINTI MOHD HERMIN', email: 'g-66566831@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1062', evaluators: ['koko', 'hem'] },
@@ -108,13 +108,12 @@ const TEACHERS_DB = [
   { id: 'g-60240212', name: 'SUMARTINI BINTI SEMAIL', email: 'g-60240212@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1065', evaluators: ['petang'] },
   { id: 'g-44240213', name: 'SURIANTI BINTI IRWAN', email: 'g-44240213@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1066', evaluators: ['pk1'] },
   { id: 'g-12240214', name: 'SUZAN KOJUNA', email: 'g-12240214@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1067', evaluators: ['koko'] },
-  { id: 'g-94511001', name: 'SUZANAH AWANG HUSSIN', email: 'g-94511001@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1068', evaluators: [] }, // Tidak tersenarai khusus
+  { id: 'g-94511001', name: 'SUZANAH AWANG HUSSIN', email: 'g-94511001@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1068', evaluators: [] },
   { id: 'g-06240215', name: 'VICTORIA JOHN', email: 'g-06240215@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1069', evaluators: ['pk1'] },
   { id: 'g-16240217', name: 'WINNY TAN TZE CHING', email: 'g-16240217@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1070', evaluators: ['pk1', 'koko'] },
   { id: 'g-84240218', name: 'YUSNI BINTI YUNUS', email: 'g-84240218@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1071', evaluators: ['pk1', 'petang'] },
   { id: 'g-44524756', name: 'ZURIDHAH WAMIN', email: 'g-44524756@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1072', evaluators: ['pk1', 'koko'] },
-  // TAMBAHAN GURU BARU (Nama dlm senarai PK HEM)
-  { id: 'g-98268397', name: 'NUR AFIQAH BINTI SUKUR', email: 'g-98268397@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1073', evaluators: ['hem'] }
+  { id: 'g-baru-001', name: 'NUR AFIQAH BINTI SUKUR', email: 'g-98268397@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1073', evaluators: ['hem'] }
 ];
 
 // --- HELPER: AUTO-CONVERT GOOGLE DRIVE LINKS TO IMAGE PREVIEW ---
@@ -242,7 +241,6 @@ function LoginScreen({ onLogin, teachers }) {
 
   const handlePinSubmit = (e) => {
     e.preventDefault();
-    // LOGIC BARU: Semak PIN berdasarkan pengguna yang dipilih
     if (selectedUser && pinInput === selectedUser.pin) {
         onLogin(userType, selectedUser);
         setSelectedUser(null);
@@ -372,7 +370,6 @@ function AdminDashboard({ user, teachers, currentProfile }) {
   const [viewMode, setViewMode] = useState('list'); 
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  // NEW STATE FOR LIVE PREVIEW
   const [announcement, setAnnouncement] = useState(null);
 
   const accessibleTeachers = useMemo(() => {
@@ -387,7 +384,6 @@ function AdminDashboard({ user, teachers, currentProfile }) {
     return [];
   }, [teachers, currentProfile]);
 
-  // NEW EFFECT TO FETCH ANNOUNCEMENT FOR ADMIN PREVIEW
   useEffect(() => {
     const fetchAnnouncement = async () => {
       try {
@@ -455,7 +451,7 @@ function AdminDashboard({ user, teachers, currentProfile }) {
       {viewMode === 'list' && selectedTeacher && (
         <div className="space-y-4 animate-in slide-in-from-right-8 duration-300">
            <button onClick={() => setSelectedTeacher(null)} className="text-gray-600 hover:text-blue-600 flex items-center gap-2 font-bold text-sm bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm hover:shadow transition-all w-fit"><ChevronRight size={16} className="rotate-180" /> Kembali</button>
-           <AdminGradingView user={user} teacher={selectedTeacher} />
+           <AdminGradingView user={user} teacher={selectedTeacher} currentProfile={currentProfile} />
         </div>
       )}
 
@@ -703,7 +699,7 @@ function CalendarSettingsPanel() {
   );
 }
 
-// --- EMAIL/AUDIT PANEL (FIXED EMAIL BUTTON WITH CLIPBOARD COPY & INDIVIDUAL EMAILS) ---
+// --- EMAIL/AUDIT PANEL ---
 function EmailAutomationPanel({ teachers }) {
   const [targetWeek, setTargetWeek] = useState(1);
   const [lateList, setLateList] = useState([]);
@@ -838,12 +834,17 @@ function TeacherCard({ teacher, onClick, user }) {
   );
 }
 
-function AdminGradingView({ user, teacher }) {
+// --- ADMIN GRADING VIEW (DENGAN FUNGSI DELETE) ---
+function AdminGradingView({ user, teacher, currentProfile }) {
   const [submissions, setSubmissions] = useState({});
   const [selectedWeek, setSelectedWeek] = useState(null);
   const [gradingMode, setGradingMode] = useState(false);
   const [gradeData, setGradeData] = useState({ score: '', comment: '' });
   const [isSaving, setIsSaving] = useState(false);
+  
+  // State untuk pengesahan delete (Khusus GB & Admin ICT)
+  const [confirmAdminDelete, setConfirmAdminDelete] = useState(false);
+  const isAdminOrGB = currentProfile?.id === 'admin_gb' || currentProfile?.id === 'admin_sys';
 
   useEffect(() => {
     if (!user) return;
@@ -856,7 +857,9 @@ function AdminGradingView({ user, teacher }) {
   }, [user, teacher.id]);
 
   const handleSelectWeek = (week) => {
-    setSelectedWeek(week); setGradingMode(false);
+    setSelectedWeek(week); 
+    setGradingMode(false); 
+    setConfirmAdminDelete(false);
     if (submissions[week]) setGradeData({ score: submissions[week].score || '', comment: submissions[week].comment || '' });
   };
 
@@ -869,6 +872,15 @@ function AdminGradingView({ user, teacher }) {
       });
       setGradingMode(false);
     } catch (e) { alert("Gagal menyimpan."); } finally { setIsSaving(false); }
+  };
+
+  // Fungsi Padam untuk Pentadbir
+  const handleAdminDelete = async () => {
+      try {
+          await deleteDoc(doc(db, DB_COLLECTION, submissions[selectedWeek].id));
+          setConfirmAdminDelete(false);
+          setSelectedWeek(null);
+      } catch (e) { console.error("Gagal memadam", e); }
   };
 
   return (
@@ -894,7 +906,7 @@ function AdminGradingView({ user, teacher }) {
 
       <div className="lg:w-1/3">
         {selectedWeek && submissions[selectedWeek] ? (
-          <div className="bg-white rounded-2xl shadow-2xl border border-blue-100 p-6 h-full flex flex-col animate-in slide-in-from-right-4 duration-300">
+          <div className="bg-white rounded-2xl shadow-2xl border border-blue-100 p-6 h-full flex flex-col animate-in slide-in-from-right-4 duration-300 overflow-y-auto">
             <div className="flex justify-between items-start mb-6">
                 <h3 className="font-extrabold text-lg text-gray-900">Butiran M{selectedWeek}</h3>
                 <button onClick={() => setSelectedWeek(null)} className="text-gray-400 hover:text-gray-600"><X size={20}/></button>
@@ -905,7 +917,7 @@ function AdminGradingView({ user, teacher }) {
                <p className="text-[10px] font-bold text-gray-500">{formatDateMY(submissions[selectedWeek].submittedAt)}</p>
             </div>
 
-            <a href={submissions[selectedWeek].content} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-slate-50 p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all group mb-6">
+            <a href={submissions[selectedWeek].content} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-slate-50 p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all group mb-6 shrink-0">
                 <div className="bg-blue-600 text-white p-2 rounded-lg group-hover:scale-110 transition-transform"><ExternalLink size={18} /></div>
                 <div className="overflow-hidden flex-1"><label className="text-[9px] font-black text-gray-400 uppercase block mb-1">Pautan RPH</label><span className="text-xs font-bold text-blue-700 truncate block underline">KLIK UNTUK BUKA</span></div>
             </a>
@@ -921,9 +933,9 @@ function AdminGradingView({ user, teacher }) {
                     </div>
                 </div>
             ) : (
-                <div className="mt-auto space-y-3">
+                <div className="mt-auto space-y-3 pb-2">
                    {submissions[selectedWeek].score && (
-                       <div className="bg-green-50 p-5 rounded-2xl border border-green-200 text-center shadow-inner">
+                       <div className="bg-green-50 p-5 rounded-2xl border border-green-200 text-center shadow-inner mb-4">
                            <div className="text-4xl font-black text-green-700">{submissions[selectedWeek].score}%</div>
                            <p className="text-xs text-green-800 italic mt-2">"{submissions[selectedWeek].comment}"</p>
                        </div>
@@ -937,6 +949,25 @@ function AdminGradingView({ user, teacher }) {
                            <SendHorizonal size={14} /> HANTAR KEPUTUSAN KE GURU
                        </button>
                    )}
+
+                   {/* ADMIN DELETE BUTTON (VETO) */}
+                   {isAdminOrGB && (
+                       <div className="pt-3 mt-3 border-t border-gray-100">
+                           {confirmAdminDelete ? (
+                               <div className="bg-red-50 p-4 rounded-xl border border-red-200 text-center animate-in fade-in">
+                                   <p className="text-xs font-bold text-red-800 mb-3">Pasti mahu padam penghantaran ini?</p>
+                                   <div className="flex gap-2">
+                                       <button onClick={() => setConfirmAdminDelete(false)} className="flex-1 py-2 bg-white text-stone-600 border border-stone-200 rounded-lg text-xs font-bold hover:bg-stone-50 transition-colors">BATAL</button>
+                                       <button onClick={handleAdminDelete} className="flex-1 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors rounded-lg text-xs font-bold shadow-md">YA, PADAM</button>
+                                   </div>
+                               </div>
+                           ) : (
+                               <button onClick={() => setConfirmAdminDelete(true)} className="w-full bg-white text-red-500 font-bold py-3 rounded-xl hover:bg-red-50 hover:border-red-200 transition-colors border border-red-100 flex items-center justify-center gap-2 text-[10px] shadow-sm tracking-widest uppercase">
+                                   <Trash2 size={14} /> PADAM PENGHANTARAN GURU (VETO)
+                               </button>
+                           )}
+                       </div>
+                   )}
                 </div>
             )}
           </div>
@@ -946,7 +977,7 @@ function AdminGradingView({ user, teacher }) {
   );
 }
 
-// --- TEACHER PORTAL (UPDATED WITH REAL-TIME ANNOUNCEMENT) ---
+// --- TEACHER PORTAL (DENGAN FUNGSI DELETE GURU) ---
 function TeacherPortal({ user, profile }) {
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [linkInput, setLinkInput] = useState('');
@@ -954,11 +985,12 @@ function TeacherPortal({ user, profile }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calendarData, setCalendarData] = useState({});
   const [announcement, setAnnouncement] = useState({ text: '', isActive: false, type: 'info' });
+  
+  // State untuk confirm delete guru
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
-    // Sync Calendar
     getDoc(doc(db, DB_SETTINGS, 'school_calendar')).then(s => s.exists() && setCalendarData(s.data()));
-    // Sync Real-Time Announcement
     const unsubAnn = onSnapshot(doc(db, DB_SETTINGS, 'announcement'), (snap) => {
         if (snap.exists()) setAnnouncement(snap.data());
     });
@@ -967,7 +999,10 @@ function TeacherPortal({ user, profile }) {
 
   useEffect(() => {
     if (!user) return;
-    const unsub = onSnapshot(doc(db, DB_COLLECTION, `${profile.id}_w${selectedWeek}`), (doc) => setSubmission(doc.data()));
+    const unsub = onSnapshot(doc(db, DB_COLLECTION, `${profile.id}_w${selectedWeek}`), (doc) => {
+        setSubmission(doc.data());
+        setConfirmDelete(false); // Reset delete state bila minggu berubah atau data masuk
+    });
     return () => unsub();
   }, [user, profile.id, selectedWeek]);
 
@@ -985,7 +1020,18 @@ function TeacherPortal({ user, profile }) {
           teacherId: profile.id, teacherName: profile.name, week: selectedWeek, content: linkInput,
           status: 'submitted', submittedAt: now.toISOString(), isLate: isLate, score: null
         });
+        setLinkInput('');
     } catch (e) { alert("Gagal menghantar."); console.error(e); } finally { setIsSubmitting(false); }
+  };
+
+  // Fungsi Padam Oleh Guru
+  const handleDeleteSubmission = async () => {
+    try {
+        await deleteDoc(doc(db, DB_COLLECTION, `${profile.id}_w${selectedWeek}`));
+        // submission state akan jadi null secara automatik sebab onSnapshot listener
+    } catch (e) {
+        console.error("Gagal memadam", e);
+    }
   };
 
   const getAnnStyles = (t) => {
@@ -1063,8 +1109,9 @@ function TeacherPortal({ user, profile }) {
                     <div className="flex-1 overflow-hidden"><label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-0.5">FOLDER GOOGLE DRIVE</label><span className="text-blue-700 font-black truncate text-xs block underline group-hover:no-underline uppercase">Klik Untuk Semak Fail</span></div>
                 </a>
 
+                {/* PAPARAN JIKA SUDAH DISEMAK */}
                 {submission.status === 'graded' && (
-                    <div className="bg-white border-2 border-green-400 p-8 rounded-[2.5rem] animate-in slide-in-from-bottom-6 shadow-2xl relative overflow-hidden">
+                    <div className="bg-white border-2 border-green-400 p-8 rounded-[2.5rem] animate-in slide-in-from-bottom-6 shadow-2xl relative overflow-hidden mt-6">
                         <div className="absolute top-0 right-0 p-4 opacity-10"><CheckCircle size={80}/></div>
                         <div className="flex items-center justify-between mb-4 relative z-10">
                             <h4 className="font-black text-green-800 text-xs uppercase tracking-widest flex items-center gap-2">REKOD SEMAKAN</h4>
@@ -1075,9 +1122,32 @@ function TeacherPortal({ user, profile }) {
                         </div>
                     </div>
                 )}
+
+                {/* BUTANG BATAL/PADAM JIKA BELUM DISEMAK */}
+                {submission.status !== 'graded' && (
+                    <div className="w-full pt-4">
+                        {confirmDelete ? (
+                            <div className="bg-red-50 p-5 rounded-2xl border border-red-200 text-center animate-in fade-in shadow-inner">
+                                <p className="text-sm font-bold text-red-800 mb-4">Adakah anda pasti? Rekod ini akan dipadam.</p>
+                                <div className="flex gap-3">
+                                    <button onClick={() => setConfirmDelete(false)} className="flex-1 py-3 bg-white text-stone-600 border border-stone-200 rounded-xl text-xs font-bold hover:bg-stone-50 transition-colors shadow-sm">BATALKAN</button>
+                                    <button onClick={handleDeleteSubmission} className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md transition-colors">YA, PADAM</button>
+                                </div>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setConfirmDelete(true)}
+                                className="w-full bg-white text-red-500 font-bold py-4 rounded-2xl border-2 border-red-100 hover:bg-red-50 hover:border-red-200 transition-all flex justify-center items-center gap-2 text-xs shadow-sm uppercase tracking-widest"
+                            >
+                                <Trash2 size={18} /> BATAL & PADAM PENGHANTARAN INI
+                            </button>
+                        )}
+                    </div>
+                )}
+
              </div>
            ) : (
-             <form onSubmit={handleTurnIn} className="space-y-6 bg-white p-2 rounded-3xl w-full">
+             <form onSubmit={handleTurnIn} className="space-y-6 bg-white p-2 rounded-3xl w-full animate-in fade-in">
                 <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl flex gap-4 text-xs text-amber-900 text-left items-start shadow-inner">
                     <AlertTriangle size={20} className="shrink-0 mt-0.5 text-amber-600" />
                     <div><p className="font-black uppercase mb-1 tracking-widest">Sila Ambil Perhatian</p><p className="leading-relaxed font-medium">Sila pastikan link Google Drive anda telah ditetapkan kepada <strong>"Anyone with the link can view"</strong> sebelum menghantar.</p></div>
