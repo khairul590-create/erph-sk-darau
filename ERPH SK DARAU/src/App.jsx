@@ -10,7 +10,7 @@ const firebaseConfig = {
   // Vercel > Project Settings > Environment Variables
   // Nama Variable: VITE_GOOGLE_API_KEY
   // Value: (API Key Firebase anda)
-  // apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+  apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
   apiKey: "",
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
@@ -1162,3 +1162,4 @@ function TeacherPortal({ user, profile }) {
     </div>
   );
 }
+
