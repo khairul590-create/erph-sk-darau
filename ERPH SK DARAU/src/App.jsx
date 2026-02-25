@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, orderBy, getDocs, getDoc } from 'firebase/firestore';
-import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal } from 'lucide-react';
+import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, orderBy, getDocs, getDoc, deleteDoc } from 'firebase/firestore';
+import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal, Trash2 } from 'lucide-react';
 
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
@@ -10,7 +10,8 @@ const firebaseConfig = {
   // Vercel > Project Settings > Environment Variables
   // Nama Variable: VITE_GOOGLE_API_KEY
   // Value: (API Key Firebase anda)
-  apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+  // apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+  apiKey: "",
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
   storageBucket: "erph-sk-darau-2026.firebasestorage.app",
@@ -72,7 +73,7 @@ const TEACHERS_DB = [
   { id: 'g-62237494', name: 'MARILYN SANDRA JEFFREY', email: 'g-62237494@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1034', evaluators: ['pk1', 'petang'] },
   { id: 'g-32240181', name: 'MAZNIH BINTI MADIN', email: 'g-32240181@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1035', evaluators: [] },
   { id: 'g-25256470', name: 'MELVIN HENRY', email: 'g-25256470@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1036', evaluators: ['pk1', 'koko'] },
-  { id: 'g-ipgp25204192', name: 'MUHAMMAD HAFIZ BIN ABDUL MUTALIB', email: 'g-ipgp25204192@moe-dl.edu.my', subject: 'Guru Akademik (Baru)', avatar: '', pin: '1037', evaluators: ['petang', 'koko'] },
+  { id: 'muhammadhafiz', name: 'MUHAMMAD HAFIZ BIN ABDUL MUTALIB', email: 'muhammadhafiz.abdulmutalib@moe-dl.edu.my', subject: 'Guru Akademik (Baru)', avatar: '', pin: '1037', evaluators: ['petang', 'koko'] },
   { id: 'g-49240184', name: 'MUJOS BIN MIASIN', email: 'g-49240184@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1038', evaluators: ['pk1', 'koko'] },
   { id: 'g-42240186', name: 'NONI BINTI ALI', email: 'g-42240186@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1039', evaluators: ['petang', 'hem'] },
   { id: 'g-50254583', name: 'NOORAIDY BINTI MUTANG', email: 'g-50254583@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1040', evaluators: ['hem'] },
@@ -1161,5 +1162,3 @@ function TeacherPortal({ user, profile }) {
     </div>
   );
 }
-
-
