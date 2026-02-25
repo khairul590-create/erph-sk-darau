@@ -61,7 +61,7 @@ const TEACHERS_DB = [
   { id: 'g-60240170', name: 'JOMILIN BINTI SIBIN', email: 'g-60240170@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1023', evaluators: ['pk1'] },
   { id: 'g-18240172', name: 'JURIA BINTI JUSOH', email: 'g-18240172@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1024', evaluators: [] },
   { id: 'g-48240174', name: 'KHAIRNIELISA @ KHAIRUNISA BINTI LIAM', email: 'g-48240174@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1025', evaluators: ['pk1', 'koko'] },
-  { id: 'g-97239289', name: 'KHAIRUL AZWANI BIN AHININ', email: 'g-97239289@moe-dl.edu.my', subject: 'Guru Akademik', avatar: 'https://drive.google.com/file/d/1_qqCMlpiQSwRTGFjM1OQbPwgSefQfm-8/view?usp=sharing', pin: '1026', evaluators: ['hem', 'koko'] },
+  { id: 'g-97239289', name: 'KHAIRUL AZWANI BIN AHININ', email: 'g-97239289@moe-dl.edu.my', subject: 'Guru Akademik', avatar: 'https://i.postimg.cc/fTb7Yx8D/pic_1768728139100.jpg', pin: '6363', evaluators: ['hem', 'koko'] },
   { id: 'g-28241668', name: 'KUNG ANNY @ WAN NUR ARDINI ABDULLAH', email: 'g-28241668@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1027', evaluators: ['pk1'] },
   { id: 'g-40240177', name: 'LAWI ANAK KECHENDAI', email: 'g-40240177@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1028', evaluators: ['petang', 'hem'] },
   { id: 'g-06250632', name: 'LESLEY DESIREE EDANG', email: 'g-06250632@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1029', evaluators: ['petang', 'koko'] },
@@ -1161,5 +1161,6 @@ function TeacherPortal({ user, profile }) {
     </div>
   );
 }
+
 
 
