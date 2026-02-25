@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, orderBy, getDocs, getDoc, deleteDoc } from 'firebase/firestore';
-import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal, Trash2 } from 'lucide-react';
+import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, orderBy, getDocs, getDoc } from 'firebase/firestore';
+import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal } from 'lucide-react';
 
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
@@ -11,10 +11,10 @@ const firebaseConfig = {
   
   // NOTA UNTUK PENGGUNA VERCEL:
   // Sila un-comment (buang //) pada baris di bawah ini apabila deploy ke Vercel:
-  // apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+  apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
 
   // Untuk tujuan paparan preview di sini (elak error compile), kita guna string kosong:
-  apiKey: "", 
+  // apiKey: "ISI_API_KEY_FIREBASE_ANDA_DISINI", 
   
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
@@ -1166,3 +1166,4 @@ function TeacherPortal({ user, profile }) {
     </div>
   );
 }
+
