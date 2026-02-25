@@ -11,7 +11,6 @@ const firebaseConfig = {
   // Nama Variable: VITE_GOOGLE_API_KEY
   // Value: (API Key Firebase anda)
   apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
-  apiKey: "",
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
   storageBucket: "erph-sk-darau-2026.firebasestorage.app",
@@ -1162,4 +1161,5 @@ function TeacherPortal({ user, profile }) {
     </div>
   );
 }
+
 
