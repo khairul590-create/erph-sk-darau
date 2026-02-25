@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, orderBy, getDocs, getDoc } from 'firebase/firestore';
-import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal } from 'lucide-react';
+import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, orderBy, getDocs, getDoc, deleteDoc } from 'firebase/firestore';
+import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal, Trash2 } from 'lucide-react';
 
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
@@ -11,10 +11,10 @@ const firebaseConfig = {
   
   // NOTA UNTUK PENGGUNA VERCEL:
   // Sila un-comment (buang //) pada baris di bawah ini apabila deploy ke Vercel:
-  apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+  // apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
 
   // Untuk tujuan paparan preview di sini (elak error compile), kita guna string kosong:
-  // apiKey: "ISI_API_KEY_FIREBASE_ANDA_DISINI", 
+  apiKey: "", 
   
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
@@ -37,7 +37,7 @@ const TOTAL_WEEKS = 42;
 const LOGO_SK_DARAU = "https://lh3.googleusercontent.com/d/1iVOOLzgxpQv2BGFAPH1QuCgVxIR9GTmx";
 const LOGO_TS25 = "https://lh3.googleusercontent.com/d/13aBIWqbHgWmnUACjF0dTpbL5mPfmiGO7";
 
-// --- DATA GURU SK DARAU (73 ORANG - Disusun Ikut Gambar Senarai PK) ---
+// --- DATA GURU SK DARAU (73 ORANG - Termasuk Nur Afiqah) ---
 // 'evaluators' array menentukan siapa yang boleh melihat guru ini.
 // Kod: 'pk1' (Pentadbiran), 'hem' (HEM), 'koko' (Kokurikulum), 'petang' (Petang)
 const TEACHERS_DB = [
@@ -66,7 +66,7 @@ const TEACHERS_DB = [
   { id: 'g-60240170', name: 'JOMILIN BINTI SIBIN', email: 'g-60240170@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1023', evaluators: ['pk1'] },
   { id: 'g-18240172', name: 'JURIA BINTI JUSOH', email: 'g-18240172@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1024', evaluators: [] },
   { id: 'g-48240174', name: 'KHAIRNIELISA @ KHAIRUNISA BINTI LIAM', email: 'g-48240174@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1025', evaluators: ['pk1', 'koko'] },
-  { id: 'g-97239289', name: 'KHAIRUL AZWANI BIN AHININ', email: 'g-97239289@moe-dl.edu.my', subject: 'Guru Akademik', avatar: 'https://drive.google.com/file/d/1_qqCMlpiQSwRTGFjM1OQbPwgSefQfm-8/view?usp=sharing', pin: '1026', evaluators: ['koko'] },
+  { id: 'g-97239289', name: 'KHAIRUL AZWANI BIN AHININ', email: 'g-97239289@moe-dl.edu.my', subject: 'Guru Akademik', avatar: 'https://drive.google.com/file/d/1_qqCMlpiQSwRTGFjM1OQbPwgSefQfm-8/view?usp=sharing', pin: '1026', evaluators: ['hem', 'koko'] },
   { id: 'g-28241668', name: 'KUNG ANNY @ WAN NUR ARDINI ABDULLAH', email: 'g-28241668@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1027', evaluators: ['pk1'] },
   { id: 'g-40240177', name: 'LAWI ANAK KECHENDAI', email: 'g-40240177@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1028', evaluators: ['petang', 'hem'] },
   { id: 'g-06250632', name: 'LESLEY DESIREE EDANG', email: 'g-06250632@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1029', evaluators: ['petang', 'koko'] },
@@ -77,7 +77,7 @@ const TEACHERS_DB = [
   { id: 'g-62237494', name: 'MARILYN SANDRA JEFFREY', email: 'g-62237494@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1034', evaluators: ['pk1', 'petang'] },
   { id: 'g-32240181', name: 'MAZNIH BINTI MADIN', email: 'g-32240181@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1035', evaluators: [] },
   { id: 'g-25256470', name: 'MELVIN HENRY', email: 'g-25256470@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1036', evaluators: ['pk1', 'koko'] },
-  { id: 'muhammadhafiz', name: 'MUHAMMAD HAFIZ BIN ABDUL MUTALIB', email: 'muhammadhafiz.abdulmutalib@moe-dl.edu.my', subject: 'Guru Akademik (Baru)', avatar: '', pin: '1037', evaluators: ['petang', 'koko'] },
+  { id: 'g-ipgp25204192', name: 'MUHAMMAD HAFIZ BIN ABDUL MUTALIB', email: 'g-ipgp25204192@moe-dl.edu.my', subject: 'Guru Akademik (Baru)', avatar: '', pin: '1037', evaluators: ['petang', 'koko'] },
   { id: 'g-49240184', name: 'MUJOS BIN MIASIN', email: 'g-49240184@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1038', evaluators: ['pk1', 'koko'] },
   { id: 'g-42240186', name: 'NONI BINTI ALI', email: 'g-42240186@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1039', evaluators: ['petang', 'hem'] },
   { id: 'g-50254583', name: 'NOORAIDY BINTI MUTANG', email: 'g-50254583@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1040', evaluators: ['hem'] },
@@ -113,7 +113,7 @@ const TEACHERS_DB = [
   { id: 'g-16240217', name: 'WINNY TAN TZE CHING', email: 'g-16240217@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1070', evaluators: ['pk1', 'koko'] },
   { id: 'g-84240218', name: 'YUSNI BINTI YUNUS', email: 'g-84240218@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1071', evaluators: ['pk1', 'petang'] },
   { id: 'g-44524756', name: 'ZURIDHAH WAMIN', email: 'g-44524756@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1072', evaluators: ['pk1', 'koko'] },
-  { id: 'g-baru-001', name: 'NUR AFIQAH BINTI SUKUR', email: 'g-98268397@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1073', evaluators: ['hem'] }
+  { id: 'g-98268397', name: 'NUR AFIQAH BINTI SUKUR', email: 'g-98268397@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1073', evaluators: ['hem'] }
 ];
 
 // --- HELPER: AUTO-CONVERT GOOGLE DRIVE LINKS TO IMAGE PREVIEW ---
@@ -834,7 +834,7 @@ function TeacherCard({ teacher, onClick, user }) {
   );
 }
 
-// --- ADMIN GRADING VIEW (DENGAN FUNGSI DELETE) ---
+// --- ADMIN GRADING VIEW (DENGAN FUNGSI DELETE VETO) ---
 function AdminGradingView({ user, teacher, currentProfile }) {
   const [submissions, setSubmissions] = useState({});
   const [selectedWeek, setSelectedWeek] = useState(null);
@@ -859,7 +859,7 @@ function AdminGradingView({ user, teacher, currentProfile }) {
   const handleSelectWeek = (week) => {
     setSelectedWeek(week); 
     setGradingMode(false); 
-    setConfirmAdminDelete(false);
+    setConfirmAdminDelete(false); // Reset delete state jika ubah minggu
     if (submissions[week]) setGradeData({ score: submissions[week].score || '', comment: submissions[week].comment || '' });
   };
 
@@ -1166,4 +1166,3 @@ function TeacherPortal({ user, profile }) {
     </div>
   );
 }
-
