@@ -11,7 +11,7 @@ const firebaseConfig = {
   
   // NOTA UNTUK PENGGUNA VERCEL:
   // Sila un-comment (buang //) pada baris di bawah ini apabila deploy ke Vercel:
-  // apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+  apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
 
   // Untuk tujuan paparan preview di sini (elak error compile), kita guna string kosong:
   apiKey: "", 
@@ -1166,3 +1166,4 @@ function TeacherPortal({ user, profile }) {
     </div>
   );
 }
+
