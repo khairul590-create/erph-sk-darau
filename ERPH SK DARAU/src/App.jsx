@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, orderBy, getDocs, getDoc, deleteDoc } from 'firebase/firestore';
-import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal, Trash2 } from 'lucide-react';
+import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, getDocs, getDoc, deleteDoc } from 'firebase/firestore';
+import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal, Trash2, Award } from 'lucide-react';
 
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
@@ -18,12 +18,10 @@ const firebaseConfig = {
   appId: "1:604130256349:web:f031c7363de450ab6e8234"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+// Helper Path Firestore untuk mengelakkan ralat Permission Denied
+const getPublicCollection = (name) => collection(db, 'artifacts', appId, 'public', 'data', name);
+const getPublicDoc = (col, documentId) => doc(db, 'artifacts', appId, 'public', 'data', col, documentId);
 
-// Nama Koleksi Database
 const DB_COLLECTION = 'submissions_2026';
 const DB_SETTINGS = 'settings_2026'; 
 
@@ -32,9 +30,7 @@ const TOTAL_WEEKS = 42;
 const LOGO_SK_DARAU = "https://lh3.googleusercontent.com/d/1iVOOLzgxpQv2BGFAPH1QuCgVxIR9GTmx";
 const LOGO_TS25 = "https://lh3.googleusercontent.com/d/13aBIWqbHgWmnUACjF0dTpbL5mPfmiGO7";
 
-// --- DATA GURU SK DARAU (73 ORANG - Termasuk Nur Afiqah) ---
-// 'evaluators' array menentukan siapa yang boleh melihat guru ini.
-// Kod: 'pk1' (Pentadbiran), 'hem' (HEM), 'koko' (Kokurikulum), 'petang' (Petang)
+// --- DATA GURU SK DARAU (73 ORANG) ---
 const TEACHERS_DB = [
   { id: 'g-87240145', name: 'ABDUL AZIZ BIN ABDULLAH', email: 'g-87240145@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1001', evaluators: ['petang', 'hem'] },
   { id: 'g-05569692', name: 'AHMED GHAZALI BIN APIUDDIN', email: 'g-05569692@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1002', evaluators: ['hem'] },
@@ -123,6 +119,28 @@ const getAvatarUrl = (url) => {
   return url;
 };
 
+// --- HELPER: GET GRADE INITIAL FOR MINI BOXES ---
+const getGradeInitial = (grade) => {
+  if(!grade) return '';
+  switch(grade) {
+    case 'Cemerlang': return 'C';
+    case 'Sangat Baik': return 'SB';
+    case 'Baik': return 'B';
+    case 'Perlu Bimbingan': return 'PB';
+    default: return '';
+  }
+};
+
+const getGradeColor = (grade) => {
+  switch(grade) {
+    case 'Cemerlang': return 'text-green-800 bg-green-100 border-green-300';
+    case 'Sangat Baik': return 'text-blue-800 bg-blue-100 border-blue-300';
+    case 'Baik': return 'text-yellow-800 bg-yellow-100 border-yellow-300';
+    case 'Perlu Bimbingan': return 'text-red-800 bg-red-100 border-red-300';
+    default: return 'text-green-800 bg-green-50';
+  }
+}
+
 // --- HELPER: DATE FORMATTER MALAYSIA ---
 const formatDateMY = (isoString) => {
   if (!isoString) return '';
@@ -165,7 +183,7 @@ const sendIndividualEmail = (teacher, type, extraData = {}) => {
         body = `Assalamualaikum dan Salam Sejahtera ${teacher.name},\n\nSemakan mendapati tuan/puan masih belum menghantar RPH bagi Minggu ${extraData.week}. Sila hantar dengan kadar segera.\n\nTerima kasih.\nPentadbir SK Darau`;
     } else if (type === 'grading') {
         subject = `KEPUTUSAN SEMAKAN RPH: Minggu ${extraData.week}`;
-        body = `Assalamualaikum ${teacher.name},\n\nRPH Minggu ${extraData.week} anda telah disemak.\n\nMARKAH: ${extraData.score}%\nULASAN: ${extraData.comment}\n\nTerima kasih atas komitmen anda.\nPentadbir SK Darau`;
+        body = `Assalamualaikum ${teacher.name},\n\nRPH Minggu ${extraData.week} anda telah disemak.\n\nTAHAP PENCAPAIAN: ${extraData.score}\nULASAN: ${extraData.comment}\n\nTerima kasih atas komitmen anda.\nPentadbir SK Darau`;
     } else if (type === 'general') {
         subject = `Hubungi Pentadbir: ${teacher.name}`;
         body = `Assalamualaikum ${teacher.name},\n\nMerujuk kepada perkara...`;
@@ -195,7 +213,13 @@ export default function App() {
 
   useEffect(() => {
     const initAuth = async () => {
-        try { await signInAnonymously(auth); } catch (error) { console.error("Auth Error:", error); }
+        try {
+          if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+            await signInWithCustomToken(auth, __initial_auth_token);
+          } else {
+            await signInAnonymously(auth);
+          }
+        } catch (error) { console.error("Auth Error:", error); }
     };
     initAuth();
     const unsubscribe = onAuthStateChanged(auth, (u) => { setUser(u); setLoading(false); });
@@ -368,26 +392,23 @@ function AdminDashboard({ user, teachers, currentProfile }) {
   const [announcement, setAnnouncement] = useState(null);
 
   const accessibleTeachers = useMemo(() => {
-    // GB dan Admin nampak semua
     if (currentProfile.access === 'all') return teachers;
-    
-    // PK lain nampak berdasarkan tag 'evaluators'
     if (currentProfile.access === 'restricted' && currentProfile.filterRole) {
         return teachers.filter(t => t.evaluators && t.evaluators.includes(currentProfile.filterRole));
     }
-    
     return [];
   }, [teachers, currentProfile]);
 
   useEffect(() => {
+    if(!user) return;
     const fetchAnnouncement = async () => {
       try {
-        const annDoc = await getDoc(doc(db, DB_SETTINGS, 'announcement'));
+        const annDoc = await getDoc(getPublicDoc(DB_SETTINGS, 'announcement'));
         if (annDoc.exists()) setAnnouncement(annDoc.data());
       } catch (e) { console.log(e); }
     };
     fetchAnnouncement();
-  }, [viewMode]); 
+  }, [viewMode, user]); 
 
   const filteredTeachers = accessibleTeachers.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
@@ -404,7 +425,6 @@ function AdminDashboard({ user, teachers, currentProfile }) {
         </div>
       </div>
 
-      {/* ADMIN LIVE PREVIEW BANNER */}
       {announcement?.isActive && announcement?.text && (
         <div className="w-full bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3 animate-in fade-in">
            <div className="bg-yellow-100 p-2 rounded text-yellow-700 shrink-0"><Megaphone size={20}/></div>
@@ -458,7 +478,7 @@ function AdminDashboard({ user, teachers, currentProfile }) {
 }
 
 // --- ANNOUNCEMENT PANEL ---
-function AnnouncementPanel() {
+function AnnouncementPanel({ user }) {
   const [announcement, setAnnouncement] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [type, setType] = useState('info'); 
@@ -468,12 +488,13 @@ function AnnouncementPanel() {
   const [calendarData, setCalendarData] = useState({});
 
   useEffect(() => {
+    if(!user) return;
     const fetchData = async () => {
       try {
-        const calDoc = await getDoc(doc(db, DB_SETTINGS, 'school_calendar'));
+        const calDoc = await getDoc(getPublicDoc(DB_SETTINGS, 'school_calendar'));
         if (calDoc.exists()) setCalendarData(calDoc.data());
 
-        const annDoc = await getDoc(doc(db, DB_SETTINGS, 'announcement'));
+        const annDoc = await getDoc(getPublicDoc(DB_SETTINGS, 'announcement'));
         if (annDoc.exists()) {
           setAnnouncement(annDoc.data().text || '');
           setIsActive(annDoc.data().isActive ?? true);
@@ -482,7 +503,7 @@ function AnnouncementPanel() {
       } catch (e) { console.error(e); } finally { setLoading(false); }
     };
     fetchData();
-  }, []);
+  }, [user]);
 
   const generateTemplate = () => {
     const start = calendarData[`week_${selectedWeek}_start`];
@@ -498,7 +519,7 @@ function AnnouncementPanel() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await setDoc(doc(db, DB_SETTINGS, 'announcement'), {
+      await setDoc(getPublicDoc(DB_SETTINGS, 'announcement'), {
         text: announcement,
         isActive: isActive,
         type: type,
@@ -524,7 +545,6 @@ function AnnouncementPanel() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
-      {/* KONTROL EDITOR */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="bg-purple-100 text-purple-600 p-2 rounded-lg"><Megaphone size={24} /></div>
@@ -576,7 +596,6 @@ function AnnouncementPanel() {
         </div>
       </div>
 
-      {/* LIVE PREVIEW DASHBOARD GURU */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between mb-2">
            <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-widest">Paparan Sisi Guru (Live Preview)</h3>
@@ -589,7 +608,6 @@ function AnnouncementPanel() {
                 <div className="w-6 h-6 bg-slate-100 rounded-full"></div>
             </div>
 
-            {/* PREVIEW BANNER SEBENAR */}
             {isActive && announcement ? (
               <div className={`w-full ${style.bg} border-l-4 ${style.border} rounded-r-xl p-5 shadow-sm flex flex-col sm:flex-row gap-4 animate-in slide-in-from-top-4 duration-500`}>
                 <div className={`bg-white p-2.5 rounded-full shadow-sm ${style.text} shrink-0 self-start`}>
@@ -628,25 +646,26 @@ function AnnouncementPanel() {
 }
 
 // --- CALENDAR SETTINGS PANEL ---
-function CalendarSettingsPanel() {
+function CalendarSettingsPanel({ user }) {
   const [calendarData, setCalendarData] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if(!user) return;
     const fetchCalendar = async () => {
       try {
-        const docSnap = await getDoc(doc(db, DB_SETTINGS, 'school_calendar'));
+        const docSnap = await getDoc(getPublicDoc(DB_SETTINGS, 'school_calendar'));
         if (docSnap.exists()) setCalendarData(docSnap.data());
       } catch (e) { console.error(e); } finally { setLoading(false); }
     };
     fetchCalendar();
-  }, []);
+  }, [user]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await setDoc(doc(db, DB_SETTINGS, 'school_calendar'), calendarData);
+      await setDoc(getPublicDoc(DB_SETTINGS, 'school_calendar'), calendarData);
       alert("Takwim berjaya disimpan!");
     } catch (e) { alert("Gagal menyimpan."); } finally { setSaving(false); }
   };
@@ -695,7 +714,7 @@ function CalendarSettingsPanel() {
 }
 
 // --- EMAIL/AUDIT PANEL ---
-function EmailAutomationPanel({ teachers }) {
+function EmailAutomationPanel({ teachers, user }) {
   const [targetWeek, setTargetWeek] = useState(1);
   const [lateList, setLateList] = useState([]);
   const [missingList, setMissingList] = useState([]);
@@ -703,10 +722,11 @@ function EmailAutomationPanel({ teachers }) {
   const [scanning, setScanning] = useState(false);
 
   const scanForLateSubmissions = async () => {
+    if(!user) return;
     setScanning(true);
     setLateList([]); setMissingList([]); setOnTimeList([]);
     try {
-      const q = query(collection(db, DB_COLLECTION), where('week', '==', parseInt(targetWeek)));
+      const q = query(getPublicCollection(DB_COLLECTION), where('week', '==', parseInt(targetWeek)));
       const querySnapshot = await getDocs(q);
       const submittedMap = {}; 
       querySnapshot.forEach(doc => submittedMap[doc.data().teacherId] = doc.data());
@@ -797,7 +817,7 @@ function TeacherCard({ teacher, onClick, user }) {
   const [stats, setStats] = useState({ submitted: 0 });
   useEffect(() => {
     if (!user) return;
-    const q = query(collection(db, DB_COLLECTION), where('teacherId', '==', teacher.id));
+    const q = query(getPublicCollection(DB_COLLECTION), where('teacherId', '==', teacher.id));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       let sub = 0; snapshot.forEach(doc => { if (doc.data().status !== 'pending') sub++; });
       setStats({ submitted: sub });
@@ -829,7 +849,7 @@ function TeacherCard({ teacher, onClick, user }) {
   );
 }
 
-// --- ADMIN GRADING VIEW (DENGAN FUNGSI DELETE VETO) ---
+// --- ADMIN GRADING VIEW ---
 function AdminGradingView({ user, teacher, currentProfile }) {
   const [submissions, setSubmissions] = useState({});
   const [selectedWeek, setSelectedWeek] = useState(null);
@@ -837,13 +857,12 @@ function AdminGradingView({ user, teacher, currentProfile }) {
   const [gradeData, setGradeData] = useState({ score: '', comment: '' });
   const [isSaving, setIsSaving] = useState(false);
   
-  // State untuk pengesahan delete (Khusus GB & Admin ICT)
   const [confirmAdminDelete, setConfirmAdminDelete] = useState(false);
   const isAdminOrGB = currentProfile?.id === 'admin_gb' || currentProfile?.id === 'admin_sys';
 
   useEffect(() => {
     if (!user) return;
-    const q = query(collection(db, DB_COLLECTION), where('teacherId', '==', teacher.id));
+    const q = query(getPublicCollection(DB_COLLECTION), where('teacherId', '==', teacher.id));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const subs = {}; snapshot.forEach(doc => subs[doc.data().week] = { id: doc.id, ...doc.data() });
       setSubmissions(subs);
@@ -854,25 +873,27 @@ function AdminGradingView({ user, teacher, currentProfile }) {
   const handleSelectWeek = (week) => {
     setSelectedWeek(week); 
     setGradingMode(false); 
-    setConfirmAdminDelete(false); // Reset delete state jika ubah minggu
+    setConfirmAdminDelete(false);
     if (submissions[week]) setGradeData({ score: submissions[week].score || '', comment: submissions[week].comment || '' });
   };
 
   const saveGrade = async () => {
-    if (!selectedWeek || !submissions[selectedWeek]) return;
+    if (!selectedWeek || !submissions[selectedWeek] || !gradeData.score) {
+        alert("Sila pilih tahap pencapaian sebelum menyimpan.");
+        return;
+    }
     setIsSaving(true);
     try {
-      await updateDoc(doc(db, DB_COLLECTION, submissions[selectedWeek].id), {
-        status: 'graded', score: parseInt(gradeData.score), comment: gradeData.comment, gradedAt: new Date().toISOString()
+      await updateDoc(getPublicDoc(DB_COLLECTION, submissions[selectedWeek].id), {
+        status: 'graded', score: gradeData.score, comment: gradeData.comment, gradedAt: new Date().toISOString()
       });
       setGradingMode(false);
     } catch (e) { alert("Gagal menyimpan."); } finally { setIsSaving(false); }
   };
 
-  // Fungsi Padam untuk Pentadbir
   const handleAdminDelete = async () => {
       try {
-          await deleteDoc(doc(db, DB_COLLECTION, submissions[selectedWeek].id));
+          await deleteDoc(getPublicDoc(DB_COLLECTION, submissions[selectedWeek].id));
           setConfirmAdminDelete(false);
           setSelectedWeek(null);
       } catch (e) { console.error("Gagal memadam", e); }
@@ -889,10 +910,10 @@ function AdminGradingView({ user, teacher, currentProfile }) {
           {Array.from({length: TOTAL_WEEKS}, (_, i) => i + 1).map(week => {
             const sub = submissions[week];
             return (
-              <button key={week} onClick={() => sub ? handleSelectWeek(week) : null} className={`relative h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-all ${sub ? (sub.status === 'graded' ? 'bg-green-50 border-green-200 text-green-700 shadow-inner' : 'bg-blue-50 border-blue-200 text-blue-700') : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed'} ${selectedWeek === week ? 'ring-4 ring-blue-100 border-blue-500 scale-105 z-10' : ''}`}>
+              <button key={week} onClick={() => sub ? handleSelectWeek(week) : null} className={`relative h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-all ${sub ? (sub.status === 'graded' ? `shadow-inner ${getGradeColor(sub.score)}` : 'bg-blue-50 border-blue-200 text-blue-700') : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed'} ${selectedWeek === week ? 'ring-4 ring-blue-200 border-blue-500 scale-105 z-10' : ''}`}>
                 <span className="font-black text-xs">M{week}</span>
                 {sub?.isLate && <span className="absolute -bottom-2 text-[7px] bg-red-600 text-white px-1.5 py-0.5 rounded-full font-black shadow-sm z-20">LEWAT</span>}
-                {sub?.score && <span className="absolute top-1 right-1 text-[8px] font-black text-green-800">{sub.score}%</span>}
+                {sub?.score && <span className="absolute top-1 right-1 text-[8px] font-black">{getGradeInitial(sub.score)}</span>}
               </button>
             );
           })}
@@ -919,24 +940,38 @@ function AdminGradingView({ user, teacher, currentProfile }) {
 
             {gradingMode ? (
                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mt-auto space-y-4">
-                    <h4 className="font-black text-xs text-gray-800 uppercase tracking-widest">Penilaian</h4>
-                    <input type="number" min="0" max="100" className="w-full p-2.5 border border-gray-300 rounded-lg text-sm font-bold" value={gradeData.score} onChange={(e) => setGradeData({...gradeData, score: e.target.value})} placeholder="Markah (0-100)" />
-                    <textarea className="w-full p-2.5 border border-gray-300 rounded-lg text-xs" rows="3" value={gradeData.comment} onChange={(e) => setGradeData({...gradeData, comment: e.target.value})} placeholder="Ulasan pentadbir..." />
+                    <h4 className="font-black text-xs text-gray-800 uppercase tracking-widest">Penilaian RPH</h4>
+                    
+                    {/* DROPDOWN PEMARKAHAN BARU */}
+                    <select 
+                        className="w-full p-3 border border-gray-300 rounded-lg text-sm font-bold bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                        value={gradeData.score}
+                        onChange={(e) => setGradeData({...gradeData, score: e.target.value})}
+                    >
+                        <option value="" disabled>Pilih Tahap Pencapaian...</option>
+                        <option value="Cemerlang">Cemerlang</option>
+                        <option value="Sangat Baik">Sangat Baik</option>
+                        <option value="Baik">Baik</option>
+                        <option value="Perlu Bimbingan">Perlu Bimbingan</option>
+                    </select>
+
+                    <textarea className="w-full p-3 border border-gray-300 rounded-lg text-xs" rows="3" value={gradeData.comment} onChange={(e) => setGradeData({...gradeData, comment: e.target.value})} placeholder="Ulasan pentadbir..." />
                     <div className="flex gap-2">
-                        <button onClick={() => setGradingMode(false)} className="flex-1 py-2 text-xs font-bold text-gray-500">BATAL</button>
-                        <button onClick={saveGrade} disabled={isSaving} className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-xs font-black shadow-lg shadow-blue-100 uppercase">{isSaving ? '...' : 'SIMPAN'}</button>
+                        <button onClick={() => setGradingMode(false)} className="flex-1 py-2 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-lg">BATAL</button>
+                        <button onClick={saveGrade} disabled={isSaving} className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-xs font-black shadow-lg shadow-blue-100 uppercase hover:bg-blue-700">{isSaving ? '...' : 'SIMPAN'}</button>
                     </div>
                 </div>
             ) : (
                 <div className="mt-auto space-y-3 pb-2">
                    {submissions[selectedWeek].score && (
-                       <div className="bg-green-50 p-5 rounded-2xl border border-green-200 text-center shadow-inner mb-4">
-                           <div className="text-4xl font-black text-green-700">{submissions[selectedWeek].score}%</div>
-                           <p className="text-xs text-green-800 italic mt-2">"{submissions[selectedWeek].comment}"</p>
+                       <div className={`p-5 rounded-2xl border text-center shadow-inner mb-4 ${getGradeColor(submissions[selectedWeek].score)}`}>
+                           <div className="flex justify-center mb-2"><Award size={28}/></div>
+                           <div className="text-xl font-black">{submissions[selectedWeek].score}</div>
+                           <p className="text-xs italic mt-2 opacity-80">"{submissions[selectedWeek].comment}"</p>
                        </div>
                    )}
                    <button onClick={() => setGradingMode(true)} className="w-full bg-blue-600 text-white font-black py-4 rounded-xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-2 uppercase text-xs">
-                     <CheckCircle size={18} /> {submissions[selectedWeek].score ? 'KEMASKINI NILAI' : 'MULA SEMAK'}
+                     <CheckCircle size={18} /> {submissions[selectedWeek].score ? 'KEMASKINI TAHAP' : 'MULA SEMAK'}
                    </button>
                    
                    {submissions[selectedWeek].score && (
@@ -972,7 +1007,7 @@ function AdminGradingView({ user, teacher, currentProfile }) {
   );
 }
 
-// --- TEACHER PORTAL (DENGAN FUNGSI DELETE GURU) ---
+// --- TEACHER PORTAL ---
 function TeacherPortal({ user, profile }) {
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [linkInput, setLinkInput] = useState('');
@@ -980,23 +1015,22 @@ function TeacherPortal({ user, profile }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calendarData, setCalendarData] = useState({});
   const [announcement, setAnnouncement] = useState({ text: '', isActive: false, type: 'info' });
-  
-  // State untuk confirm delete guru
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
-    getDoc(doc(db, DB_SETTINGS, 'school_calendar')).then(s => s.exists() && setCalendarData(s.data()));
-    const unsubAnn = onSnapshot(doc(db, DB_SETTINGS, 'announcement'), (snap) => {
+    if(!user) return;
+    getDoc(getPublicDoc(DB_SETTINGS, 'school_calendar')).then(s => s.exists() && setCalendarData(s.data()));
+    const unsubAnn = onSnapshot(getPublicDoc(DB_SETTINGS, 'announcement'), (snap) => {
         if (snap.exists()) setAnnouncement(snap.data());
     });
     return () => unsubAnn();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
-    const unsub = onSnapshot(doc(db, DB_COLLECTION, `${profile.id}_w${selectedWeek}`), (doc) => {
-        setSubmission(doc.data());
-        setConfirmDelete(false); // Reset delete state bila minggu berubah atau data masuk
+    const unsub = onSnapshot(getPublicDoc(DB_COLLECTION, `${profile.id}_w${selectedWeek}`), (docSnap) => {
+        setSubmission(docSnap.exists() ? docSnap.data() : null);
+        setConfirmDelete(false); 
     });
     return () => unsub();
   }, [user, profile.id, selectedWeek]);
@@ -1011,7 +1045,7 @@ function TeacherPortal({ user, profile }) {
     if (dl && now > new Date(dl)) isLate = true;
 
     try {
-        await setDoc(doc(db, DB_COLLECTION, `${profile.id}_w${selectedWeek}`), {
+        await setDoc(getPublicDoc(DB_COLLECTION, `${profile.id}_w${selectedWeek}`), {
           teacherId: profile.id, teacherName: profile.name, week: selectedWeek, content: linkInput,
           status: 'submitted', submittedAt: now.toISOString(), isLate: isLate, score: null
         });
@@ -1019,14 +1053,8 @@ function TeacherPortal({ user, profile }) {
     } catch (e) { alert("Gagal menghantar."); console.error(e); } finally { setIsSubmitting(false); }
   };
 
-  // Fungsi Padam Oleh Guru
   const handleDeleteSubmission = async () => {
-    try {
-        await deleteDoc(doc(db, DB_COLLECTION, `${profile.id}_w${selectedWeek}`));
-        // submission state akan jadi null secara automatik sebab onSnapshot listener
-    } catch (e) {
-        console.error("Gagal memadam", e);
-    }
+    try { await deleteDoc(getPublicDoc(DB_COLLECTION, `${profile.id}_w${selectedWeek}`)); } catch (e) { console.error("Gagal memadam", e); }
   };
 
   const getAnnStyles = (t) => {
@@ -1054,7 +1082,6 @@ function TeacherPortal({ user, profile }) {
       </div>
 
       <div className="md:col-span-8 lg:col-span-9 bg-white border border-gray-200 rounded-3xl p-6 md:p-10 flex flex-col items-center shadow-sm relative overflow-hidden min-h-[500px] order-1 md:order-2">
-         {/* REAL-TIME ANNOUNCEMENT BANNER */}
          {announcement.isActive && announcement.text && (
             <div className={`w-full ${annStyle.bg} border-l-4 ${annStyle.border} rounded-r-2xl p-6 mb-8 shadow-sm flex flex-col sm:flex-row gap-5 relative z-10 animate-in slide-in-from-top-4 duration-700`}>
                <div className="bg-white p-3 rounded-full shadow-md text-blue-600 shrink-0 self-start">
@@ -1106,14 +1133,14 @@ function TeacherPortal({ user, profile }) {
 
                 {/* PAPARAN JIKA SUDAH DISEMAK */}
                 {submission.status === 'graded' && (
-                    <div className="bg-white border-2 border-green-400 p-8 rounded-[2.5rem] animate-in slide-in-from-bottom-6 shadow-2xl relative overflow-hidden mt-6">
-                        <div className="absolute top-0 right-0 p-4 opacity-10"><CheckCircle size={80}/></div>
-                        <div className="flex items-center justify-between mb-4 relative z-10">
-                            <h4 className="font-black text-green-800 text-xs uppercase tracking-widest flex items-center gap-2">REKOD SEMAKAN</h4>
-                            <span className="bg-green-600 text-white px-4 py-1 rounded-full font-black text-2xl shadow-xl">{submission.score}%</span>
+                    <div className={`border-2 p-8 rounded-[2.5rem] animate-in slide-in-from-bottom-6 shadow-2xl relative overflow-hidden mt-6 ${getGradeColor(submission.score)}`}>
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><Award size={80}/></div>
+                        <div className="flex flex-col mb-4 relative z-10 text-left border-b border-black/10 pb-4">
+                            <h4 className="font-black text-xs uppercase tracking-widest opacity-70 mb-2">TAHAP PENCAPAIAN RPH</h4>
+                            <span className="font-black text-2xl md:text-3xl">{submission.score}</span>
                         </div>
-                        <div className="bg-green-50/50 p-4 rounded-2xl border border-green-100 relative z-10 shadow-inner">
-                            <p className="text-sm text-green-900 font-bold italic leading-relaxed">"{submission.comment}"</p>
+                        <div className="bg-white/50 p-4 rounded-2xl border border-white relative z-10 shadow-inner text-left">
+                            <p className="text-sm font-bold italic leading-relaxed">"{submission.comment}"</p>
                         </div>
                     </div>
                 )}
@@ -1130,10 +1157,7 @@ function TeacherPortal({ user, profile }) {
                                 </div>
                             </div>
                         ) : (
-                            <button
-                                onClick={() => setConfirmDelete(true)}
-                                className="w-full bg-white text-red-500 font-bold py-4 rounded-2xl border-2 border-red-100 hover:bg-red-50 hover:border-red-200 transition-all flex justify-center items-center gap-2 text-xs shadow-sm uppercase tracking-widest"
-                            >
+                            <button onClick={() => setConfirmDelete(true)} className="w-full bg-white text-red-500 font-bold py-4 rounded-2xl border-2 border-red-100 hover:bg-red-50 hover:border-red-200 transition-all flex justify-center items-center gap-2 text-xs shadow-sm uppercase tracking-widest">
                                 <Trash2 size={18} /> BATAL & PADAM PENGHANTARAN INI
                             </button>
                         )}
@@ -1161,9 +1185,3 @@ function TeacherPortal({ user, profile }) {
     </div>
   );
 }
-
-
-
-
-
-
