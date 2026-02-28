@@ -55,7 +55,6 @@ const TEACHERS_DB = [
   { id: 'g-16240163', name: 'HASLINAH BTE HUSSIN', email: 'g-16240163@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1018', evaluators: [] },
   { id: 'g-38240165', name: 'IDA HENDRAMARIA BINTI SUKUR', email: 'g-38240165@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1019', evaluators: ['pk1'] },
   { id: 'g-79244893', name: 'JERRY BIN JULIAN', email: 'g-79244893@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1020', evaluators: ['pk1'] },
-  { id: 'g-81273852', name: 'JINEO SIMUN', email: 'g-81273852@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1021', evaluators: ['koko'] },
   { id: 'g-27240169', name: 'JOHAN @ MOHD JOHAN BIN JANA', email: 'g-27240169@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1022', evaluators: ['petang', 'koko'] },
   { id: 'g-60240170', name: 'JOMILIN BINTI SIBIN', email: 'g-60240170@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1023', evaluators: ['pk1'] },
   { id: 'g-18240172', name: 'JURIA BINTI JUSOH', email: 'g-18240172@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1024', evaluators: [] },
@@ -124,6 +123,19 @@ const getAvatarUrl = (url) => {
 
 // --- HELPER: GRADE SYSTEM (Cemerlang / Sangat Baik / Baik / Perlu Bimbingan) ---
 const GRADE_OPTIONS = ['Cemerlang', 'Sangat Baik', 'Baik', 'Perlu Bimbingan'];
+
+// --- KATA SEMANGAT HARIAN (0=Ahad, 1=Isnin, 2=Selasa, 3=Rabu, 4=Khamis, 5=Jumaat, 6=Sabtu) ---
+const DAILY_MOTIVASI = {
+  0: { kata: "Rehat adalah hak, semoga esok cikgu kembali bersemangat! 🌙", warna: "from-violet-500 to-purple-600" },
+  1: { kata: "Semoga urusan cikgu hari ini dipermudahkan. Selamat memulakan minggu! 🌟", warna: "from-blue-500 to-cyan-600" },
+  2: { kata: "Cikgu adalah lilin yang menerangi masa depan anak bangsa. Teruskan! 🕯️", warna: "from-emerald-500 to-teal-600" },
+  3: { kata: "Pertengahan minggu — cikgu dah separuh jalan! Teruskan usaha terbaik. 💪", warna: "from-amber-500 to-orange-600" },
+  4: { kata: "Setiap ilmu yang cikgu kongsi adalah amal jariah yang tak ternilai. ✨", warna: "from-rose-500 to-pink-600" },
+  5: { kata: "Jumaat yang berkat. Semoga cikgu sentiasa dalam perlindungan-Nya. 🤲", warna: "from-green-500 to-emerald-600" },
+  6: { kata: "Sabtu yang tenang. Rehat dan cas semula tenaga untuk minggu hadapan! ☀️", warna: "from-sky-500 to-blue-600" },
+};
+
+const HARI_NAMA = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
 
 const getGradeInitial = (grade) => {
   if (!grade) return '';
@@ -1097,14 +1109,56 @@ function TeacherPortal({ user, profile }) {
           </div>
         )}
 
-        {/* Profil Guru */}
-        <div className="relative z-10 flex flex-col items-center mb-8">
-          <div className="w-20 h-20 rounded-full border-4 border-white shadow-xl overflow-hidden bg-slate-100 mb-4 flex items-center justify-center text-slate-300 font-black text-2xl uppercase">
-            {profile.name.charAt(0)}
-          </div>
-          <h2 className="text-xl font-black text-gray-900 text-center leading-tight uppercase px-4">{profile.name}</h2>
-          <p className="text-[10px] text-blue-600 font-black bg-blue-50 px-3 py-1 rounded-full mt-3 tracking-widest uppercase">{profile.email}</p>
-        </div>
+        {/* Profil Guru — Avatar + Selamat Datang + Motivasi Harian */}
+        {(() => {
+          const hariIndex = new Date().getDay();
+          const motivasi = DAILY_MOTIVASI[hariIndex];
+          const hariNama = HARI_NAMA[hariIndex];
+          return (
+            <div className="relative z-10 w-full max-w-lg mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
+              <div className="relative bg-white rounded-3xl border border-gray-100 shadow-xl overflow-hidden">
+                <div className={`bg-gradient-to-r ${motivasi.warna} h-24 w-full`}></div>
+                <div className="flex flex-col items-center -mt-14 pb-6 px-6">
+                  <div className="relative mb-4">
+                    <div className="w-28 h-28 rounded-full border-4 border-white shadow-2xl overflow-hidden bg-slate-100 flex items-center justify-center">
+                      {profile.avatar ? (
+                        <img src={getAvatarUrl(profile.avatar)} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className={`bg-gradient-to-br ${motivasi.warna} w-full h-full flex items-center justify-center text-white font-black text-4xl uppercase`}>
+                          {profile.name.charAt(0)}
+                        </span>
+                      )}
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-md">
+                      <div className={`w-5 h-5 rounded-full bg-gradient-to-br ${motivasi.warna}`}></div>
+                    </div>
+                  </div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Selamat Datang,</p>
+                  <h2 className="text-lg font-black text-gray-900 text-center leading-tight uppercase px-2 mb-2">
+                    Cikgu {profile.name}
+                  </h2>
+                  <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-full tracking-widest uppercase border border-blue-100">{profile.email}</span>
+                  <div className="w-full border-t border-dashed border-gray-100 my-5"></div>
+                  <div className={`w-full bg-gradient-to-r ${motivasi.warna} p-0.5 rounded-2xl shadow-lg`}>
+                    <div className="bg-white rounded-[14px] px-5 py-4 flex items-start gap-3">
+                      <div className={`bg-gradient-to-br ${motivasi.warna} text-white p-2 rounded-xl shrink-0 shadow-md`}>
+                        <span className="text-base leading-none">💬</span>
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-[9px] font-black uppercase tracking-widest mb-1 text-gray-400">
+                          KATA SEMANGAT — {hariNama.toUpperCase()}
+                        </p>
+                        <p className="text-sm font-bold text-gray-800 leading-relaxed">
+                          {motivasi.kata}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Bahagian Penghantaran */}
         <div className="relative z-10 w-full max-w-lg text-center border-t border-gray-50 pt-8 mt-2">
@@ -1179,6 +1233,26 @@ function TeacherPortal({ user, profile }) {
             </div>
           ) : (
             /* Form Hantar */
+            {/* Semak takwim ditetapkan dahulu */}
+            {!calendarData[`week_${selectedWeek}_start`] ? (
+              <div className="w-full animate-in fade-in zoom-in-95 duration-500">
+                <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center text-center gap-4">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
+                    <Calendar size={32} className="text-slate-400" />
+                  </div>
+                  <div>
+                    <p className="font-black text-slate-600 uppercase tracking-widest text-sm mb-2">Takwim Belum Ditetapkan</p>
+                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                      Pentadbir perlu menetapkan tarikh Minggu {selectedWeek} terlebih dahulu sebelum penghantaran RPH dibuka.
+                    </p>
+                  </div>
+                  <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 flex items-center gap-2 text-xs text-amber-700 font-bold">
+                    <AlertTriangle size={14} className="shrink-0" />
+                    Sila hubungi pentadbir sekolah anda.
+                  </div>
+                </div>
+              </div>
+            ) : (
             <form onSubmit={handleTurnIn} className="space-y-6 bg-white p-2 rounded-3xl w-full animate-in fade-in">
               <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl flex gap-4 text-xs text-amber-900 text-left items-start shadow-inner">
                 <AlertTriangle size={20} className="shrink-0 mt-0.5 text-amber-600" />
@@ -1195,6 +1269,7 @@ function TeacherPortal({ user, profile }) {
                 {isSubmitting ? 'PENGHANTARAN SEDANG DIPROSES...' : <><Send size={20} /> HANTAR RPH M{selectedWeek}</>}
               </button>
             </form>
+            )}
           )}
         </div>
       </div>
