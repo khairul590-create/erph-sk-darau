@@ -1232,28 +1232,7 @@ function TeacherPortal({ user, profile }) {
                 </div>
               )}
             </div>
-          ) : (
-            /* Form Hantar */
-            {/* Semak takwim ditetapkan dahulu */}
-            {!takwimDitetapkan ? (
-              <div className="w-full animate-in fade-in zoom-in-95 duration-500">
-                <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center text-center gap-4">
-                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
-                    <Calendar size={32} className="text-slate-400" />
-                  </div>
-                  <div>
-                    <p className="font-black text-slate-600 uppercase tracking-widest text-sm mb-2">Takwim Belum Ditetapkan</p>
-                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                      Pentadbir perlu menetapkan tarikh Minggu {selectedWeek} terlebih dahulu sebelum penghantaran RPH dibuka.
-                    </p>
-                  </div>
-                  <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 flex items-center gap-2 text-xs text-amber-700 font-bold">
-                    <AlertTriangle size={14} className="shrink-0" />
-                    Sila hubungi pentadbir sekolah anda.
-                  </div>
-                </div>
-              </div>
-            ) : (
+          ) : takwimDitetapkan ? (
             <form onSubmit={handleTurnIn} className="space-y-6 bg-white p-2 rounded-3xl w-full animate-in fade-in">
               <div className="bg-amber-50 border border-amber-200 p-5 rounded-2xl flex gap-4 text-xs text-amber-900 text-left items-start shadow-inner">
                 <AlertTriangle size={20} className="shrink-0 mt-0.5 text-amber-600" />
@@ -1270,7 +1249,24 @@ function TeacherPortal({ user, profile }) {
                 {isSubmitting ? 'PENGHANTARAN SEDANG DIPROSES...' : <><Send size={20} /> HANTAR RPH M{selectedWeek}</>}
               </button>
             </form>
-            )}
+          ) : (
+            <div className="w-full animate-in fade-in zoom-in-95 duration-500">
+              <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center text-center gap-4">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
+                  <Calendar size={32} className="text-slate-400" />
+                </div>
+                <div>
+                  <p className="font-black text-slate-600 uppercase tracking-widest text-sm mb-2">Takwim Belum Ditetapkan</p>
+                  <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                    Pentadbir perlu menetapkan tarikh Minggu {selectedWeek} terlebih dahulu sebelum penghantaran RPH dibuka.
+                  </p>
+                </div>
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 flex items-center gap-2 text-xs text-amber-700 font-bold">
+                  <AlertTriangle size={14} className="shrink-0" />
+                  Sila hubungi pentadbir sekolah anda.
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>
