@@ -1071,6 +1071,7 @@ function TeacherPortal({ user, profile }) {
     }
   };
   const annStyle = getAnnStyles(announcement.type);
+  const takwimDitetapkan = !!(calendarData[`week_${selectedWeek}_start`]);
 
   return (
     <div className="flex flex-col md:grid md:grid-cols-12 gap-6 pb-20 relative">
@@ -1234,7 +1235,7 @@ function TeacherPortal({ user, profile }) {
           ) : (
             /* Form Hantar */
             {/* Semak takwim ditetapkan dahulu */}
-            {!calendarData[`week_${selectedWeek}_start`] ? (
+            {!takwimDitetapkan ? (
               <div className="w-full animate-in fade-in zoom-in-95 duration-500">
                 <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-10 flex flex-col items-center text-center gap-4">
                   <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center">
