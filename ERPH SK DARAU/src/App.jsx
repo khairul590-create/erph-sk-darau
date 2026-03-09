@@ -2,14 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { getFirestore, collection, query, where, onSnapshot, doc, setDoc, updateDoc, getDocs, getDoc, deleteDoc } from 'firebase/firestore';
-import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal, Trash2, Award } from 'lucide-react';
+import { User, FileText, CheckCircle, BarChart3, LogOut, MessageSquare, Save, Search, School, Lock, Clock, Mail, AlertTriangle, Send, LogIn, KeyRound, ChevronRight, Users, ShieldCheck, ExternalLink, X, Calendar, Filter, ChevronLeft, ChevronDown, ThumbsUp, Megaphone, Bell, Info, AlertOctagon, RefreshCw, Copy, ClipboardCopy, SendHorizonal, Trash2, Award, UserPlus, Pencil, UserX, UserCheck } from 'lucide-react';
 
 // --- FIREBASE CONFIGURATION (LIVE SK DARAU 2026) ---
 const firebaseConfig = {
-  // PENTING: Pastikan anda set 'VITE_GOOGLE_API_KEY' di dalam
-  // Vercel > Project Settings > Environment Variables
-  // Nama Variable: VITE_GOOGLE_API_KEY
-  // Value: (API Key Firebase anda)
   apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
   authDomain: "erph-sk-darau-2026.firebaseapp.com",
   projectId: "erph-sk-darau-2026",
@@ -22,19 +18,16 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Nama Koleksi Database
 const DB_COLLECTION = 'submissions_2026';
 const DB_SETTINGS = 'settings_2026';
+const DB_TEACHERS_KEY = 'teachers_list'; // Key dalam settings_2026 untuk senarai guru
 
-// --- Constants ---
 const TOTAL_WEEKS = 42;
 const LOGO_SK_DARAU = "https://lh3.googleusercontent.com/d/1iVOOLzgxpQv2BGFAPH1QuCgVxIR9GTmx";
 const LOGO_TS25 = "https://lh3.googleusercontent.com/d/13aBIWqbHgWmnUACjF0dTpbL5mPfmiGO7";
 
-// --- DATA GURU SK DARAU (73 ORANG) ---
-// 'evaluators' array menentukan siapa yang boleh melihat guru ini.
-// Kod: 'pk1' (Pentadbiran), 'hem' (HEM), 'koko' (Kokurikulum), 'petang' (Petang)
-const TEACHERS_DB = [
+// --- DATA GURU SK DARAU (DEFAULT / SEED DATA) ---
+const TEACHERS_DB_DEFAULT = [
   { id: 'g-87240145', name: 'ABDUL AZIZ BIN ABDULLAH', email: 'g-87240145@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1001', evaluators: ['petang', 'hem'] },
   { id: 'g-05569692', name: 'AHMED GHAZALI BIN APIUDDIN', email: 'g-05569692@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1002', evaluators: ['hem'] },
   { id: 'g-00564304', name: 'AINI NADZIRAH BINTI MOHD KHLUBI', email: 'g-00564304@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1003', evaluators: ['petang', 'koko'] },
@@ -109,22 +102,24 @@ const TEACHERS_DB = [
   { id: 'g-98268397', name: 'NUR AFIQAH BINTI SUKUR', email: 'g-98268397@moe-dl.edu.my', subject: 'Guru Akademik', avatar: '', pin: '1073', evaluators: ['hem'] }
 ];
 
-// --- HELPER: AUTO-CONVERT GOOGLE DRIVE LINKS TO IMAGE PREVIEW ---
+// --- HELPER: AUTO-CONVERT GOOGLE DRIVE LINKS ---
 const getAvatarUrl = (url) => {
   if (!url) return null;
   if (url.includes('drive.google.com') && url.includes('/d/')) {
     const idMatch = url.match(/\/d\/(.*?)\//);
-    if (idMatch && idMatch[1]) {
-      return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
-    }
+    if (idMatch && idMatch[1]) return `https://lh3.googleusercontent.com/d/${idMatch[1]}`;
   }
   return url;
 };
 
-// --- HELPER: GRADE SYSTEM (Cemerlang / Sangat Baik / Baik / Perlu Bimbingan) ---
 const GRADE_OPTIONS = ['Cemerlang', 'Sangat Baik', 'Baik', 'Perlu Bimbingan'];
+const EVALUATOR_OPTIONS = [
+  { key: 'pk1', label: 'PK Pentadbiran' },
+  { key: 'hem', label: 'PK HEM' },
+  { key: 'koko', label: 'PK Kokurikulum' },
+  { key: 'petang', label: 'PK Petang' },
+];
 
-// --- KATA SEMANGAT HARIAN (0=Ahad, 1=Isnin, 2=Selasa, 3=Rabu, 4=Khamis, 5=Jumaat, 6=Sabtu) ---
 const DAILY_MOTIVASI = {
   0: { kata: "Rehat adalah hak, semoga esok cikgu kembali bersemangat! 🌙", warna: "from-violet-500 to-purple-600" },
   1: { kata: "Semoga urusan cikgu hari ini dipermudahkan. Selamat memulakan minggu! 🌟", warna: "from-blue-500 to-cyan-600" },
@@ -134,7 +129,6 @@ const DAILY_MOTIVASI = {
   5: { kata: "Jumaat yang berkat. Semoga cikgu sentiasa dalam perlindungan-Nya. 🤲", warna: "from-green-500 to-emerald-600" },
   6: { kata: "Sabtu yang tenang. Rehat dan cas semula tenaga untuk minggu hadapan! ☀️", warna: "from-sky-500 to-blue-600" },
 };
-
 const HARI_NAMA = ["Ahad", "Isnin", "Selasa", "Rabu", "Khamis", "Jumaat", "Sabtu"];
 
 const getGradeInitial = (grade) => {
@@ -158,7 +152,6 @@ const getGradeColor = (grade) => {
   }
 };
 
-// --- HELPER: DATE FORMATTER MALAYSIA ---
 const formatDateMY = (isoString) => {
   if (!isoString) return '';
   return new Date(isoString).toLocaleString('ms-MY', {
@@ -180,7 +173,6 @@ const formatDeadline = (deadlineStr) => {
   return new Date(deadlineStr).toLocaleString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 };
 
-// --- HELPER: SEND INDIVIDUAL EMAIL (PAUTAN TERUS GMAIL) ---
 const sendIndividualEmail = (teacher, type, extraData = {}) => {
   if (!teacher.email) { alert("Guru ini tiada alamat email dalam sistem."); return; }
   let subject = "";
@@ -199,7 +191,6 @@ const sendIndividualEmail = (teacher, type, extraData = {}) => {
   window.open(gmailUrl, '_blank');
 };
 
-// --- ADMIN ACCESS CONFIGURATION ---
 const ADMIN_PROFILES = [
   { id: 'admin_gb', name: 'Guru Besar', roleLabel: 'GB', access: 'all', description: 'Akses Penuh (Semua Guru)', avatar: '', color: 'bg-purple-600', pin: '2026' },
   { id: 'admin_sys', name: 'Admin ICT', roleLabel: 'ADMIN', access: 'all', description: 'Akses Penuh (Penyelenggaraan)', avatar: '', color: 'bg-slate-800', pin: '8888' },
@@ -209,12 +200,24 @@ const ADMIN_PROFILES = [
   { id: 'admin_petang', name: 'PK Petang', roleLabel: 'PKPETANG', access: 'restricted', filterRole: 'petang', description: 'Akses: Guru Sesi Petang', avatar: '', color: 'bg-indigo-600', pin: '3004' },
 ];
 
-// --- MAIN APP COMPONENT ---
+// --- GENERATE UNIQUE ID ---
+const generateTeacherId = () => {
+  const ts = Date.now().toString(36);
+  const rand = Math.random().toString(36).substr(2, 5);
+  return `g-new-${ts}${rand}`;
+};
+
+// ============================================================
+// MAIN APP
+// ============================================================
 export default function App() {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [currentProfile, setCurrentProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  // Teachers state — loaded from Firestore, falls back to default
+  const [teachers, setTeachers] = useState(TEACHERS_DB_DEFAULT);
+  const [teachersLoaded, setTeachersLoaded] = useState(false);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -231,6 +234,38 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // Load teachers from Firestore when user is ready
+  useEffect(() => {
+    if (!user || teachersLoaded) return;
+    const fetchTeachers = async () => {
+      try {
+        const snap = await getDoc(doc(db, DB_SETTINGS, DB_TEACHERS_KEY));
+        if (snap.exists() && snap.data().list && snap.data().list.length > 0) {
+          setTeachers(snap.data().list);
+        }
+        // else keep TEACHERS_DB_DEFAULT
+      } catch (e) {
+        console.error("Gagal muatkan senarai guru:", e);
+      } finally {
+        setTeachersLoaded(true);
+      }
+    };
+    fetchTeachers();
+  }, [user, teachersLoaded]);
+
+  // Save teachers list to Firestore (called after any add/edit/delete)
+  const saveTeachersToFirestore = async (updatedList) => {
+    try {
+      await setDoc(doc(db, DB_SETTINGS, DB_TEACHERS_KEY), {
+        list: updatedList,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (e) {
+      console.error("Gagal simpan senarai guru:", e);
+      throw e;
+    }
+  };
+
   const handleLogin = (selectedRole, profile = null) => { setRole(selectedRole); setCurrentProfile(profile); };
   const handleLogout = () => { setRole(null); setCurrentProfile(null); };
 
@@ -241,14 +276,20 @@ export default function App() {
     </div>
   );
 
-  if (!role) return <LoginScreen onLogin={handleLogin} teachers={TEACHERS_DB} />;
+  if (!role) return <LoginScreen onLogin={handleLogin} teachers={teachers} />;
 
   return (
     <div className="min-h-screen bg-slate-100 font-sans text-slate-800 flex flex-col">
       <Navbar role={role} profile={currentProfile} onLogout={handleLogout} />
       <main className="flex-grow container mx-auto p-4 md:p-6 max-w-7xl">
         {role === 'admin' ? (
-          <AdminDashboard user={user} teachers={TEACHERS_DB} currentProfile={currentProfile} />
+          <AdminDashboard
+            user={user}
+            teachers={teachers}
+            setTeachers={setTeachers}
+            saveTeachersToFirestore={saveTeachersToFirestore}
+            currentProfile={currentProfile}
+          />
         ) : (
           <TeacherPortal user={user} profile={currentProfile} />
         )}
@@ -257,7 +298,9 @@ export default function App() {
   );
 }
 
-// --- LOGIN SCREEN ---
+// ============================================================
+// LOGIN SCREEN
+// ============================================================
 function LoginScreen({ onLogin, teachers }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -374,6 +417,9 @@ function LoginScreen({ onLogin, teachers }) {
   );
 }
 
+// ============================================================
+// NAVBAR
+// ============================================================
 function Navbar({ role, profile, onLogout }) {
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
@@ -394,12 +440,16 @@ function Navbar({ role, profile, onLogout }) {
   );
 }
 
-// --- ADMIN DASHBOARD ---
-function AdminDashboard({ user, teachers, currentProfile }) {
+// ============================================================
+// ADMIN DASHBOARD
+// ============================================================
+function AdminDashboard({ user, teachers, setTeachers, saveTeachersToFirestore, currentProfile }) {
   const [viewMode, setViewMode] = useState('list');
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [announcement, setAnnouncement] = useState(null);
+
+  const isAdminOrGB = currentProfile?.id === 'admin_gb' || currentProfile?.id === 'admin_sys';
 
   const accessibleTeachers = useMemo(() => {
     if (currentProfile.access === 'all') return teachers;
@@ -448,15 +498,21 @@ function AdminDashboard({ user, teachers, currentProfile }) {
         </div>
       )}
 
-      <div className="bg-white p-1 rounded-xl border border-gray-200 inline-flex shadow-sm w-full md:w-auto overflow-x-auto">
+      {/* TAB NAVIGATION */}
+      <div className="bg-white p-1 rounded-xl border border-gray-200 inline-flex shadow-sm w-full overflow-x-auto">
         <div className="flex gap-1 min-w-full">
-          <button onClick={() => setViewMode('list')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${viewMode === 'list' ? `${currentProfile.color} text-white shadow` : 'text-gray-600 hover:bg-gray-50'}`}><BarChart3 size={18} /> Senarai Guru</button>
-          <button onClick={() => setViewMode('audit')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${viewMode === 'audit' ? 'bg-white text-red-600 border border-red-100 shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}><Mail size={18} /> Audit & Email</button>
-          <button onClick={() => setViewMode('calendar')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${viewMode === 'calendar' ? 'bg-orange-500 text-white shadow' : 'text-gray-600 hover:bg-gray-50'}`}><Calendar size={18} /> Tetapan Takwim</button>
-          <button onClick={() => setViewMode('announcement')} className={`flex-1 md:flex-none px-6 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${viewMode === 'announcement' ? 'bg-purple-600 text-white shadow' : 'text-gray-600 hover:bg-gray-50'}`}><Megaphone size={18} /> Pengumuman</button>
+          <button onClick={() => setViewMode('list')} className={`flex-1 md:flex-none px-4 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${viewMode === 'list' ? `${currentProfile.color} text-white shadow` : 'text-gray-600 hover:bg-gray-50'}`}><BarChart3 size={16} /> Senarai Guru</button>
+          <button onClick={() => setViewMode('audit')} className={`flex-1 md:flex-none px-4 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${viewMode === 'audit' ? 'bg-white text-red-600 border border-red-100 shadow-sm' : 'text-gray-600 hover:bg-gray-50'}`}><Mail size={16} /> Audit & Email</button>
+          <button onClick={() => setViewMode('calendar')} className={`flex-1 md:flex-none px-4 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${viewMode === 'calendar' ? 'bg-orange-500 text-white shadow' : 'text-gray-600 hover:bg-gray-50'}`}><Calendar size={16} /> Takwim</button>
+          <button onClick={() => setViewMode('announcement')} className={`flex-1 md:flex-none px-4 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${viewMode === 'announcement' ? 'bg-purple-600 text-white shadow' : 'text-gray-600 hover:bg-gray-50'}`}><Megaphone size={16} /> Pengumuman</button>
+          {/* TAB URUS GURU — GB & ADMIN ICT SAHAJA */}
+          {isAdminOrGB && (
+            <button onClick={() => setViewMode('manage')} className={`flex-1 md:flex-none px-4 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${viewMode === 'manage' ? 'bg-teal-600 text-white shadow' : 'text-gray-600 hover:bg-gray-50'}`}><Users size={16} /> Urus Guru</button>
+          )}
         </div>
       </div>
 
+      {/* LIST VIEW */}
       {viewMode === 'list' && !selectedTeacher && (
         <div className="space-y-4">
           <div className="relative">
@@ -483,11 +539,436 @@ function AdminDashboard({ user, teachers, currentProfile }) {
       {viewMode === 'audit' && <EmailAutomationPanel user={user} teachers={accessibleTeachers} />}
       {viewMode === 'calendar' && <CalendarSettingsPanel user={user} />}
       {viewMode === 'announcement' && <AnnouncementPanel user={user} />}
+      {viewMode === 'manage' && isAdminOrGB && (
+        <TeacherManagementPanel
+          teachers={teachers}
+          setTeachers={setTeachers}
+          saveTeachersToFirestore={saveTeachersToFirestore}
+        />
+      )}
     </div>
   );
 }
 
-// --- ANNOUNCEMENT PANEL ---
+// ============================================================
+// TEACHER MANAGEMENT PANEL (GB & ADMIN ICT ONLY)
+// ============================================================
+function TeacherManagementPanel({ teachers, setTeachers, saveTeachersToFirestore }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editTarget, setEditTarget] = useState(null); // teacher object to edit
+  const [deleteTarget, setDeleteTarget] = useState(null); // teacher to confirm delete
+  const [saving, setSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+
+  // New teacher form state
+  const [newTeacher, setNewTeacher] = useState({
+    name: '', email: '', subject: 'Guru Akademik', pin: '', evaluators: [], avatar: ''
+  });
+
+  // Edit form state
+  const [editForm, setEditForm] = useState({
+    name: '', email: '', subject: '', pin: '', evaluators: [], avatar: ''
+  });
+
+  const filtered = useMemo(() =>
+    teachers.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      t.email.toLowerCase().includes(searchTerm.toLowerCase())),
+    [teachers, searchTerm]
+  );
+
+  const showSuccess = (msg) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
+  // ---- ADD GURU ----
+  const handleAdd = async () => {
+    if (!newTeacher.name.trim() || !newTeacher.pin.trim()) {
+      alert('Nama dan PIN wajib diisi.');
+      return;
+    }
+    if (newTeacher.pin.length !== 4 || !/^\d{4}$/.test(newTeacher.pin)) {
+      alert('PIN mestilah 4 digit angka.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const teacher = {
+        id: generateTeacherId(),
+        name: newTeacher.name.trim().toUpperCase(),
+        email: newTeacher.email.trim().toLowerCase(),
+        subject: newTeacher.subject || 'Guru Akademik',
+        pin: newTeacher.pin,
+        evaluators: newTeacher.evaluators,
+        avatar: newTeacher.avatar.trim(),
+      };
+      const updated = [...teachers, teacher];
+      await saveTeachersToFirestore(updated);
+      setTeachers(updated);
+      setShowAddModal(false);
+      setNewTeacher({ name: '', email: '', subject: 'Guru Akademik', pin: '', evaluators: [], avatar: '' });
+      showSuccess(`✅ Guru "${teacher.name}" berjaya ditambah!`);
+    } catch (e) {
+      alert('Gagal menyimpan. Sila cuba lagi.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ---- OPEN EDIT MODAL ----
+  const openEdit = (teacher) => {
+    setEditTarget(teacher);
+    setEditForm({
+      name: teacher.name,
+      email: teacher.email,
+      subject: teacher.subject,
+      pin: teacher.pin,
+      evaluators: [...(teacher.evaluators || [])],
+      avatar: teacher.avatar || '',
+    });
+  };
+
+  // ---- SAVE EDIT ----
+  const handleSaveEdit = async () => {
+    if (!editForm.name.trim() || !editForm.pin.trim()) {
+      alert('Nama dan PIN wajib diisi.');
+      return;
+    }
+    if (editForm.pin.length !== 4 || !/^\d{4}$/.test(editForm.pin)) {
+      alert('PIN mestilah 4 digit angka.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const updated = teachers.map(t =>
+        t.id === editTarget.id ? {
+          ...t,
+          name: editForm.name.trim().toUpperCase(),
+          email: editForm.email.trim().toLowerCase(),
+          subject: editForm.subject,
+          pin: editForm.pin,
+          evaluators: editForm.evaluators,
+          avatar: editForm.avatar.trim(),
+        } : t
+      );
+      await saveTeachersToFirestore(updated);
+      setTeachers(updated);
+      setEditTarget(null);
+      showSuccess(`✅ Maklumat "${editForm.name.trim().toUpperCase()}" berjaya dikemaskini!`);
+    } catch (e) {
+      alert('Gagal menyimpan. Sila cuba lagi.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ---- DELETE GURU ----
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setSaving(true);
+    try {
+      const updated = teachers.filter(t => t.id !== deleteTarget.id);
+      await saveTeachersToFirestore(updated);
+      setTeachers(updated);
+      const name = deleteTarget.name;
+      setDeleteTarget(null);
+      showSuccess(`🗑️ Guru "${name}" berjaya dipadam dari senarai.`);
+    } catch (e) {
+      alert('Gagal memadam. Sila cuba lagi.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const toggleEvaluator = (key, form, setForm) => {
+    setForm(prev => ({
+      ...prev,
+      evaluators: prev.evaluators.includes(key)
+        ? prev.evaluators.filter(e => e !== key)
+        : [...prev.evaluators, key]
+    }));
+  };
+
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-teal-100 text-teal-700 p-2.5 rounded-xl"><Users size={24} /></div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Urus Senarai Guru</h3>
+              <p className="text-xs text-gray-500 uppercase font-bold tracking-widest">Tambah · Edit · Padam — Data disimpan ke Firestore</p>
+            </div>
+          </div>
+          <button onClick={() => setShowAddModal(true)} className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg shadow-teal-100 transition-all active:scale-95 text-sm uppercase">
+            <UserPlus size={18} /> Tambah Guru Baru
+          </button>
+        </div>
+
+        {/* Success message */}
+        {successMsg && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800 font-bold text-sm text-center animate-in slide-in-from-top-2">
+            {successMsg}
+          </div>
+        )}
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="bg-teal-50 border border-teal-100 rounded-xl p-3 text-center">
+            <div className="text-2xl font-black text-teal-700">{teachers.length}</div>
+            <div className="text-[10px] text-teal-600 font-bold uppercase">Jumlah Guru</div>
+          </div>
+          {EVALUATOR_OPTIONS.map(ev => (
+            <div key={ev.key} className="bg-slate-50 border border-slate-100 rounded-xl p-3 text-center">
+              <div className="text-2xl font-black text-slate-700">{teachers.filter(t => t.evaluators?.includes(ev.key)).length}</div>
+              <div className="text-[10px] text-slate-500 font-bold uppercase truncate">{ev.label.replace('PK ', '')}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Search */}
+        <div className="relative mb-4">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder={`Cari dari ${teachers.length} guru...`}
+            className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {/* Teacher List Table */}
+        <div className="overflow-x-auto rounded-xl border border-gray-100">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="text-left px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest w-8">#</th>
+                <th className="text-left px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Nama Guru</th>
+                <th className="text-left px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hidden md:table-cell">Email MOE</th>
+                <th className="text-left px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hidden lg:table-cell">Penilai</th>
+                <th className="text-center px-4 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((teacher, idx) => (
+                <tr key={teacher.id} className="border-b border-gray-50 hover:bg-slate-50 transition-colors group">
+                  <td className="px-4 py-3 text-xs text-gray-400 font-bold">{idx + 1}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-black text-xs shrink-0">
+                        {teacher.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-900 text-xs">{teacher.name}</div>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase">{teacher.subject}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-gray-500 hidden md:table-cell">{teacher.email || '—'}</td>
+                  <td className="px-4 py-3 hidden lg:table-cell">
+                    <div className="flex flex-wrap gap-1">
+                      {(teacher.evaluators || []).map(ev => (
+                        <span key={ev} className="bg-blue-50 text-blue-700 text-[9px] font-black px-2 py-0.5 rounded-full uppercase">{ev}</span>
+                      ))}
+                      {(!teacher.evaluators || teacher.evaluators.length === 0) && (
+                        <span className="text-[10px] text-gray-300 italic">—</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => openEdit(teacher)}
+                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-all border border-transparent hover:border-blue-100 group-hover:opacity-100"
+                        title="Edit maklumat guru"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(teacher)}
+                        className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-all border border-transparent hover:border-red-100 group-hover:opacity-100"
+                        title="Padam guru"
+                      >
+                        <UserX size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-12 text-gray-300 text-xs font-bold uppercase">
+                    Tiada guru ditemui
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ---- MODAL: TAMBAH GURU ---- */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="bg-teal-600 p-5 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-xl"><UserPlus size={20} /></div>
+                <div>
+                  <h3 className="font-bold text-base">Tambah Guru Baru</h3>
+                  <p className="text-teal-100 text-xs">Isi maklumat guru baharu</p>
+                </div>
+              </div>
+              <button onClick={() => setShowAddModal(false)} className="text-white/70 hover:text-white"><X size={20} /></button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Nama Penuh <span className="text-red-500">*</span></label>
+                <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-teal-500 outline-none uppercase" placeholder="CONTOH: AHMAD BIN ALI" value={newTeacher.name} onChange={(e) => setNewTeacher({ ...newTeacher, name: e.target.value.toUpperCase() })} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Email MOE</label>
+                <input type="email" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none" placeholder="g-12345678@moe-dl.edu.my" value={newTeacher.email} onChange={(e) => setNewTeacher({ ...newTeacher, email: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Subjek/Jawatan</label>
+                  <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none" placeholder="Guru Akademik" value={newTeacher.subject} onChange={(e) => setNewTeacher({ ...newTeacher, subject: e.target.value })} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5">PIN (4 Digit) <span className="text-red-500">*</span></label>
+                  <input type="text" maxLength={4} className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-bold text-center tracking-widest focus:ring-2 focus:ring-teal-500 outline-none" placeholder="0000" value={newTeacher.pin} onChange={(e) => setNewTeacher({ ...newTeacher, pin: e.target.value.replace(/\D/g, '') })} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Penilai (Pilih yang berkenaan):</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {EVALUATOR_OPTIONS.map(ev => (
+                    <button key={ev.key} type="button" onClick={() => toggleEvaluator(ev.key, newTeacher, setNewTeacher)}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-bold border-2 transition-all flex items-center gap-2 ${newTeacher.evaluators.includes(ev.key) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}>
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${newTeacher.evaluators.includes(ev.key) ? 'border-white bg-white' : 'border-gray-300'}`}>
+                        {newTeacher.evaluators.includes(ev.key) && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
+                      </div>
+                      {ev.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="p-5 border-t border-gray-100 flex gap-3">
+              <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 text-sm">BATAL</button>
+              <button onClick={handleAdd} disabled={saving} className="flex-1 py-3 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700 text-sm shadow-lg disabled:opacity-50 flex items-center justify-center gap-2">
+                {saving ? <RefreshCw size={16} className="animate-spin" /> : <UserPlus size={16} />}
+                {saving ? 'MENYIMPAN...' : 'TAMBAH GURU'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---- MODAL: EDIT GURU ---- */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="bg-blue-600 p-5 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-xl"><Pencil size={20} /></div>
+                <div>
+                  <h3 className="font-bold text-base">Edit Maklumat Guru</h3>
+                  <p className="text-blue-100 text-xs truncate max-w-[200px]">{editTarget.name}</p>
+                </div>
+              </div>
+              <button onClick={() => setEditTarget(null)} className="text-white/70 hover:text-white"><X size={20} /></button>
+            </div>
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Nama Penuh <span className="text-red-500">*</span></label>
+                <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none uppercase" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value.toUpperCase() })} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Email MOE</label>
+                <input type="email" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5">Subjek/Jawatan</label>
+                  <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none" value={editForm.subject} onChange={(e) => setEditForm({ ...editForm, subject: e.target.value })} />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5">PIN (4 Digit) <span className="text-red-500">*</span></label>
+                  <input type="text" maxLength={4} className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-bold text-center tracking-widest focus:ring-2 focus:ring-blue-500 outline-none" value={editForm.pin} onChange={(e) => setEditForm({ ...editForm, pin: e.target.value.replace(/\D/g, '') })} />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase mb-2">Penilai:</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {EVALUATOR_OPTIONS.map(ev => (
+                    <button key={ev.key} type="button" onClick={() => toggleEvaluator(ev.key, editForm, setEditForm)}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-bold border-2 transition-all flex items-center gap-2 ${editForm.evaluators.includes(ev.key) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}>
+                      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${editForm.evaluators.includes(ev.key) ? 'border-white bg-white' : 'border-gray-300'}`}>
+                        {editForm.evaluators.includes(ev.key) && <div className="w-2 h-2 rounded-full bg-blue-600"></div>}
+                      </div>
+                      {ev.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-gray-400 uppercase mb-1.5">URL Avatar (pilihan)</label>
+                <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="https://..." value={editForm.avatar} onChange={(e) => setEditForm({ ...editForm, avatar: e.target.value })} />
+              </div>
+            </div>
+            <div className="p-5 border-t border-gray-100 flex gap-3">
+              <button onClick={() => setEditTarget(null)} className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-600 font-bold hover:bg-gray-50 text-sm">BATAL</button>
+              <button onClick={handleSaveEdit} disabled={saving} className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 text-sm shadow-lg disabled:opacity-50 flex items-center justify-center gap-2">
+                {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+                {saving ? 'MENYIMPAN...' : 'SIMPAN PERUBAHAN'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---- MODAL: CONFIRM DELETE ---- */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-red-600 p-6 text-center text-white">
+              <div className="mx-auto bg-white/20 w-16 h-16 rounded-full flex items-center justify-center mb-3">
+                <UserX size={32} />
+              </div>
+              <h3 className="font-bold text-lg">Padam Guru?</h3>
+              <p className="text-red-100 text-sm mt-1">Tindakan ini tidak boleh dibatalkan</p>
+            </div>
+            <div className="p-6">
+              <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-5 text-center">
+                <p className="font-black text-gray-900 text-sm">{deleteTarget.name}</p>
+                <p className="text-xs text-gray-500 mt-1">{deleteTarget.email}</p>
+              </div>
+              <p className="text-xs text-gray-500 text-center mb-5 leading-relaxed">
+                Rekod penghantaran RPH guru ini <strong>tidak akan</strong> turut dipadam — hanya nama dari senarai log masuk yang akan dialih keluar.
+              </p>
+              <div className="flex gap-3">
+                <button onClick={() => setDeleteTarget(null)} className="flex-1 py-3 rounded-xl border border-gray-300 text-gray-600 font-bold hover:bg-gray-50">BATAL</button>
+                <button onClick={handleDelete} disabled={saving} className="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-lg disabled:opacity-50 flex items-center justify-center gap-2">
+                  {saving ? <RefreshCw size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                  {saving ? '...' : 'YA, PADAM'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// ANNOUNCEMENT PANEL
+// ============================================================
 function AnnouncementPanel({ user }) {
   const [announcement, setAnnouncement] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -634,7 +1115,9 @@ function AnnouncementPanel({ user }) {
   );
 }
 
-// --- CALENDAR SETTINGS PANEL ---
+// ============================================================
+// CALENDAR SETTINGS PANEL
+// ============================================================
 function CalendarSettingsPanel({ user }) {
   const [calendarData, setCalendarData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -701,7 +1184,9 @@ function CalendarSettingsPanel({ user }) {
   );
 }
 
-// --- EMAIL/AUDIT PANEL ---
+// ============================================================
+// EMAIL AUDIT PANEL
+// ============================================================
 function EmailAutomationPanel({ teachers, user }) {
   const [targetWeek, setTargetWeek] = useState(1);
   const [lateList, setLateList] = useState([]);
@@ -798,6 +1283,9 @@ function EmailAutomationPanel({ teachers, user }) {
   );
 }
 
+// ============================================================
+// TEACHER CARD
+// ============================================================
 function TeacherCard({ teacher, onClick, user }) {
   const [stats, setStats] = useState({ submitted: 0 });
   useEffect(() => {
@@ -827,7 +1315,9 @@ function TeacherCard({ teacher, onClick, user }) {
   );
 }
 
-// --- ADMIN GRADING VIEW ---
+// ============================================================
+// ADMIN GRADING VIEW
+// ============================================================
 function AdminGradingView({ user, teacher, currentProfile }) {
   const [submissions, setSubmissions] = useState({});
   const [selectedWeek, setSelectedWeek] = useState(null);
@@ -879,7 +1369,6 @@ function AdminGradingView({ user, teacher, currentProfile }) {
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-250px)]">
-      {/* Grid Minggu */}
       <div className="lg:w-2/3 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 overflow-y-auto custom-scrollbar">
         <div className="flex items-center gap-4 mb-6 border-b border-gray-50 pb-4">
           <div className="w-12 h-12 rounded-full border-2 border-blue-50 bg-slate-100 flex items-center justify-center text-slate-400 font-black">{teacher.name.charAt(0)}</div>
@@ -905,7 +1394,6 @@ function AdminGradingView({ user, teacher, currentProfile }) {
         </div>
       </div>
 
-      {/* Panel Butiran */}
       <div className="lg:w-1/3">
         {selectedWeek && submissions[selectedWeek] ? (
           <div className="bg-white rounded-2xl shadow-2xl border border-blue-100 p-6 h-full flex flex-col animate-in slide-in-from-right-4 duration-300 overflow-y-auto">
@@ -913,8 +1401,6 @@ function AdminGradingView({ user, teacher, currentProfile }) {
               <h3 className="font-extrabold text-lg text-gray-900">Butiran M{selectedWeek}</h3>
               <button onClick={() => setSelectedWeek(null)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
-
-            {/* Status Hantar */}
             <div className={`p-4 rounded-xl border mb-6 ${submissions[selectedWeek].isLate ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
               <div className="flex items-center gap-2 mb-1">
                 <Clock size={16} className={submissions[selectedWeek].isLate ? 'text-red-600' : 'text-green-600'} />
@@ -924,8 +1410,6 @@ function AdminGradingView({ user, teacher, currentProfile }) {
               </div>
               <p className="text-[10px] font-bold text-gray-500">{formatDateMY(submissions[selectedWeek].submittedAt)}</p>
             </div>
-
-            {/* Pautan RPH */}
             <a href={submissions[selectedWeek].content} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-slate-50 p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all group mb-6 shrink-0">
               <div className="bg-blue-600 text-white p-2 rounded-lg group-hover:scale-110 transition-transform"><ExternalLink size={18} /></div>
               <div className="overflow-hidden flex-1">
@@ -933,13 +1417,9 @@ function AdminGradingView({ user, teacher, currentProfile }) {
                 <span className="text-xs font-bold text-blue-700 truncate block underline">KLIK UNTUK BUKA</span>
               </div>
             </a>
-
-            {/* Mod Penilaian */}
             {gradingMode ? (
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mt-auto space-y-4">
                 <h4 className="font-black text-xs text-gray-800 uppercase tracking-widest">Penilaian RPH</h4>
-
-                {/* ===== DROPDOWN TAHAP PENCAPAIAN ===== */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-gray-500 uppercase block">Tahap Pencapaian:</label>
                   <div className="grid grid-cols-2 gap-2">
@@ -951,7 +1431,6 @@ function AdminGradingView({ user, teacher, currentProfile }) {
                     ))}
                   </div>
                 </div>
-
                 <textarea className="w-full p-3 border border-gray-300 rounded-lg text-xs" rows="3" value={gradeData.comment} onChange={(e) => setGradeData({ ...gradeData, comment: e.target.value })} placeholder="Ulasan pentadbir (pilihan)..." />
                 <div className="flex gap-2">
                   <button onClick={() => setGradingMode(false)} className="flex-1 py-2 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-lg">BATAL</button>
@@ -962,7 +1441,6 @@ function AdminGradingView({ user, teacher, currentProfile }) {
               </div>
             ) : (
               <div className="mt-auto space-y-3 pb-2">
-                {/* Paparan Tahap Jika Sudah Dinilai */}
                 {submissions[selectedWeek].score && (
                   <div className={`p-5 rounded-2xl border-2 text-center shadow-inner mb-4 ${getGradeColor(submissions[selectedWeek].score)}`}>
                     <div className="flex justify-center mb-2"><Award size={28} /></div>
@@ -972,18 +1450,14 @@ function AdminGradingView({ user, teacher, currentProfile }) {
                     )}
                   </div>
                 )}
-
                 <button onClick={() => setGradingMode(true)} className="w-full bg-blue-600 text-white font-black py-4 rounded-xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-2 uppercase text-xs">
                   <CheckCircle size={18} /> {submissions[selectedWeek].score ? 'KEMASKINI TAHAP' : 'MULA SEMAK'}
                 </button>
-
                 {submissions[selectedWeek].score && (
                   <button onClick={() => sendIndividualEmail(teacher, 'grading', { week: selectedWeek, score: submissions[selectedWeek].score, comment: submissions[selectedWeek].comment })} className="w-full bg-slate-100 text-slate-600 font-bold py-3 rounded-xl hover:bg-slate-200 transition-colors border border-slate-200 flex items-center justify-center gap-2 text-xs">
                     <SendHorizonal size={14} /> HANTAR KEPUTUSAN KE GURU
                   </button>
                 )}
-
-                {/* Padam (GB & Admin sahaja) */}
                 {isAdminOrGB && (
                   <div className="pt-3 mt-3 border-t border-gray-100">
                     {confirmAdminDelete ? (
@@ -1012,7 +1486,9 @@ function AdminGradingView({ user, teacher, currentProfile }) {
   );
 }
 
-// --- TEACHER PORTAL ---
+// ============================================================
+// TEACHER PORTAL
+// ============================================================
 function TeacherPortal({ user, profile }) {
   const [selectedWeek, setSelectedWeek] = useState(1);
   const [linkInput, setLinkInput] = useState('');
@@ -1034,7 +1510,6 @@ function TeacherPortal({ user, profile }) {
   useEffect(() => {
     if (!user) return;
     const unsub = onSnapshot(doc(db, DB_COLLECTION, `${profile.id}_w${selectedWeek}`), (docSnap) => {
-      // FIX: Semak exists() dahulu sebelum ambil data
       setSubmission(docSnap.exists() ? docSnap.data() : null);
       setConfirmDelete(false);
     });
@@ -1075,7 +1550,6 @@ function TeacherPortal({ user, profile }) {
 
   return (
     <div className="flex flex-col md:grid md:grid-cols-12 gap-6 pb-20 relative">
-      {/* Sidebar Minggu */}
       <div className="md:col-span-4 lg:col-span-3 bg-white border border-gray-200 rounded-2xl overflow-hidden flex flex-col shadow-sm h-auto md:h-[calc(100vh-120px)] md:sticky md:top-24 order-2 md:order-1">
         <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
           <h3 className="font-black text-xs uppercase tracking-widest text-gray-500">Pilih Minggu</h3>
@@ -1092,9 +1566,7 @@ function TeacherPortal({ user, profile }) {
         </div>
       </div>
 
-      {/* Kandungan Utama */}
       <div className="md:col-span-8 lg:col-span-9 bg-white border border-gray-200 rounded-3xl p-6 md:p-10 flex flex-col items-center shadow-sm relative overflow-hidden min-h-[500px] order-1 md:order-2">
-        {/* Banner Pengumuman */}
         {announcement.isActive && announcement.text && (
           <div className={`w-full ${annStyle.bg} border-l-4 ${annStyle.border} rounded-r-2xl p-6 mb-8 shadow-sm flex flex-col sm:flex-row gap-5 relative z-10 animate-in slide-in-from-top-4 duration-700`}>
             <div className="bg-white p-3 rounded-full shadow-md text-blue-600 shrink-0 self-start">
@@ -1110,7 +1582,6 @@ function TeacherPortal({ user, profile }) {
           </div>
         )}
 
-        {/* Profil Guru — Avatar + Selamat Datang + Motivasi Harian */}
         {(() => {
           const hariIndex = new Date().getDay();
           const motivasi = DAILY_MOTIVASI[hariIndex];
@@ -1135,9 +1606,7 @@ function TeacherPortal({ user, profile }) {
                     </div>
                   </div>
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Selamat Datang,</p>
-                  <h2 className="text-lg font-black text-gray-900 text-center leading-tight uppercase px-2 mb-2">
-                    Cikgu {profile.name}
-                  </h2>
+                  <h2 className="text-lg font-black text-gray-900 text-center leading-tight uppercase px-2 mb-2">Cikgu {profile.name}</h2>
                   <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-3 py-1 rounded-full tracking-widest uppercase border border-blue-100">{profile.email}</span>
                   <div className="w-full border-t border-dashed border-gray-100 my-5"></div>
                   <div className={`w-full bg-gradient-to-r ${motivasi.warna} p-0.5 rounded-2xl shadow-lg`}>
@@ -1146,12 +1615,8 @@ function TeacherPortal({ user, profile }) {
                         <span className="text-base leading-none">💬</span>
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="text-[9px] font-black uppercase tracking-widest mb-1 text-gray-400">
-                          KATA SEMANGAT — {hariNama.toUpperCase()}
-                        </p>
-                        <p className="text-sm font-bold text-gray-800 leading-relaxed">
-                          {motivasi.kata}
-                        </p>
+                        <p className="text-[9px] font-black uppercase tracking-widest mb-1 text-gray-400">KATA SEMANGAT — {hariNama.toUpperCase()}</p>
+                        <p className="text-sm font-bold text-gray-800 leading-relaxed">{motivasi.kata}</p>
                       </div>
                     </div>
                   </div>
@@ -1161,7 +1626,6 @@ function TeacherPortal({ user, profile }) {
           );
         })()}
 
-        {/* Bahagian Penghantaran */}
         <div className="relative z-10 w-full max-w-lg text-center border-t border-gray-50 pt-8 mt-2">
           <div className="mb-8">
             <p className="text-gray-400 font-black text-[10px] uppercase tracking-[0.2em] mb-2">Penghantaran Minggu {selectedWeek}</p>
@@ -1177,7 +1641,6 @@ function TeacherPortal({ user, profile }) {
 
           {submission ? (
             <div className="space-y-6 animate-in zoom-in duration-500 w-full">
-              {/* Status Hantar */}
               <div className={`p-8 rounded-[2rem] border-2 flex flex-col items-center shadow-2xl ${submission.isLate ? 'border-red-100 bg-red-50/50' : 'border-green-100 bg-green-50/50'}`}>
                 <div className={`p-4 rounded-full mb-4 shadow-lg bg-white ${submission.isLate ? 'text-red-600' : 'text-green-600'}`}>
                   {submission.isLate ? <AlertOctagon size={40} /> : <CheckCircle size={40} />}
@@ -1187,8 +1650,6 @@ function TeacherPortal({ user, profile }) {
                 </h3>
                 <p className="text-gray-400 mt-2 font-black text-[10px] uppercase tracking-widest">{formatDateMY(submission.submittedAt)}</p>
               </div>
-
-              {/* Pautan Folder */}
               <a href={submission.content} target="_blank" rel="noopener noreferrer" className="bg-white p-5 rounded-2xl border border-gray-200 shadow-md text-left flex items-center gap-4 hover:border-blue-500 transition-all group">
                 <div className="bg-blue-600 text-white p-3 rounded-xl shadow-lg group-hover:scale-110 transition-all"><FileText size={20} /></div>
                 <div className="flex-1 overflow-hidden">
@@ -1196,8 +1657,6 @@ function TeacherPortal({ user, profile }) {
                   <span className="text-blue-700 font-black truncate text-xs block underline group-hover:no-underline uppercase">Klik Untuk Semak Fail</span>
                 </div>
               </a>
-
-              {/* Paparan Keputusan Jika Sudah Dinilai */}
               {submission.status === 'graded' && (
                 <div className={`border-2 p-8 rounded-[2.5rem] animate-in slide-in-from-bottom-6 shadow-2xl relative overflow-hidden mt-6 ${getGradeColor(submission.score)}`}>
                   <div className="absolute top-0 right-0 p-4 opacity-10"><Award size={80} /></div>
@@ -1212,8 +1671,6 @@ function TeacherPortal({ user, profile }) {
                   )}
                 </div>
               )}
-
-              {/* Butang Padam (jika belum dinilai) */}
               {submission.status !== 'graded' && (
                 <div className="w-full pt-4">
                   {confirmDelete ? (
@@ -1257,13 +1714,10 @@ function TeacherPortal({ user, profile }) {
                 </div>
                 <div>
                   <p className="font-black text-slate-600 uppercase tracking-widest text-sm mb-2">Takwim Belum Ditetapkan</p>
-                  <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                    Pentadbir perlu menetapkan tarikh Minggu {selectedWeek} terlebih dahulu sebelum penghantaran RPH dibuka.
-                  </p>
+                  <p className="text-xs text-slate-400 leading-relaxed font-medium">Pentadbir perlu menetapkan tarikh Minggu {selectedWeek} terlebih dahulu sebelum penghantaran RPH dibuka.</p>
                 </div>
                 <div className="bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3 flex items-center gap-2 text-xs text-amber-700 font-bold">
-                  <AlertTriangle size={14} className="shrink-0" />
-                  Sila hubungi pentadbir sekolah anda.
+                  <AlertTriangle size={14} className="shrink-0" /> Sila hubungi pentadbir sekolah anda.
                 </div>
               </div>
             </div>
